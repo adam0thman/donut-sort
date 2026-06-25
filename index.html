@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#f5f0e8">
+<meta name="description" content="Donut Sort — a fun donut-stacking puzzle game.">
+<title>Donut Sort</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='44' fill='%23ff6fa3'/><circle cx='50' cy='50' r='15' fill='%23a8763c'/></svg>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.34.0/dist/tabler-icons.min.css">
+<style>
+:root{
+  --color-text-primary:#241d16;
+  --color-text-secondary:#766a5d;
+  --color-text-tertiary:#9c9082;
+  --color-background-primary:#ffffff;
+  --color-background-secondary:#f3ece0;
+  --color-background-tertiary:#efe7da;
+  --color-border-tertiary:rgba(0,0,0,.12);
+  --color-border-secondary:rgba(0,0,0,.22);
+  --border-radius-md:8px;--border-radius-lg:12px;--border-radius-xl:18px;
+  --font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --page-bg:#fbe9d7;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --color-text-primary:#f3ece2;
+    --color-text-secondary:#b2a899;
+    --color-text-tertiary:#8a8073;
+    --color-background-primary:#2a241d;
+    --color-background-secondary:#332c23;
+    --color-background-tertiary:#241f19;
+    --color-border-tertiary:rgba(255,255,255,.14);
+    --color-border-secondary:rgba(255,255,255,.26);
+    --page-bg:#1c1813;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:var(--font-sans);
+  background:var(--page-bg);
+  color:var(--color-text-primary);
+  min-height:100vh;
+  display:flex;justify-content:center;
+  padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom));
+}
+#ds-root{position:relative;width:100%;max-width:720px;}
+.donut{position:absolute;left:50%;transform:translateX(-50%);transition:bottom .18s ease,transform .15s ease;will-change:transform;}
+.donut.lift{transform:translateX(-50%) translateY(-18px) scale(1.05);}
+.donut.drop{animation:ds-drop .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes ds-drop{0%{transform:translateX(-50%) translateY(-34px)}100%{transform:translateX(-50%) translateY(0)}}
+.pole{position:relative;width:94px;border:none;background:transparent;padding:0;cursor:pointer;outline:none;flex:0 0 auto;touch-action:manipulation;}
+.pole .stick{position:absolute;left:50%;transform:translateX(-50%);width:10px;top:16px;bottom:18px;background:#d7a86b;border:1px solid #b07f49;border-radius:6px;}
+.pole .base{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:80px;height:15px;border-radius:50%;background:#cf9a5d;border:1px solid #ab7940;}
+.pole .glow{position:absolute;inset:8px 4px 2px;border-radius:14px;background:transparent;transition:background .15s;}
+.pole.sel .glow{background:rgba(255,210,90,.18);box-shadow:0 0 0 2px rgba(255,180,40,.6) inset;}
+.stack{position:absolute;bottom:18px;left:0;right:0;}
+.btn{font-family:inherit;font-size:14px;color:var(--color-text-primary);background:var(--color-background-primary);border:1px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:8px 14px;cursor:pointer;transition:background .12s,transform .08s;touch-action:manipulation;}
+.btn:hover{background:var(--color-background-secondary);}
+.btn:active{transform:scale(.96);}
+.btn:disabled{opacity:.4;cursor:default;}
+.confetti{position:absolute;top:-40px;animation:ds-fall linear forwards;pointer-events:none;}
+@keyframes ds-fall{to{transform:translateY(640px) rotate(540deg);opacity:.9;}}
+@keyframes ds-pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+@media (max-width:430px){
+  .pole{width:84px;}
+  .pole .base{width:72px;}
+}
+</style>
+</head>
+<body>
+<div id="ds-root">
+<h1 class="sr-only">Donut Sort puzzle game</h1>
+
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span style="font-size:24px;font-weight:600;letter-spacing:.2px;">Donut Sort</span>
+    <span id="ds-level" style="font-size:13px;color:var(--color-text-secondary);background:var(--color-background-secondary);padding:3px 10px;border-radius:999px;"></span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+    <span id="ds-moves" style="font-size:13px;color:var(--color-text-secondary);min-width:64px;"></span>
+    <button class="btn" id="ds-undo"><i class="ti ti-arrow-back-up" aria-hidden="true"></i> Undo</button>
+    <button class="btn" id="ds-restart"><i class="ti ti-refresh" aria-hidden="true"></i> Restart</button>
+    <button class="btn" id="ds-new"><i class="ti ti-dice-3" aria-hidden="true"></i> New deal</button>
+  </div>
+</div>
+
+<p id="ds-hint" style="font-size:13px;color:var(--color-text-tertiary);margin:0 0 10px;">Tap a pole to lift its top donuts, then tap another pole to drop them. Match flavor to flavor.</p>
+
+<div style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:18px 12px 14px;position:relative;overflow:hidden;">
+  <div id="ds-board" style="display:flex;flex-wrap:wrap;gap:14px 6px;justify-content:center;align-items:flex-end;min-height:170px;"></div>
+
+  <div id="ds-overlay" style="display:none;position:absolute;inset:0;background:rgba(20,16,12,.55);backdrop-filter:blur(2px);align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:5;">
+    <div style="background:var(--color-background-primary);border-radius:var(--border-radius-xl);padding:26px 30px;text-align:center;max-width:320px;animation:ds-pop .4s ease;">
+      <div id="ds-win-art" style="font-size:0;margin-bottom:10px;"></div>
+      <div style="font-size:20px;font-weight:600;color:var(--color-text-primary);">Level cleared!</div>
+      <div id="ds-win-sub" style="font-size:14px;color:var(--color-text-secondary);margin:6px 0 16px;"></div>
+      <button class="btn" id="ds-next" style="background:var(--color-text-primary);color:var(--color-background-primary);border-color:transparent;font-size:15px;padding:10px 22px;"></button>
+    </div>
+  </div>
+</div>
+
+<p style="text-align:center;font-size:12px;color:var(--color-text-tertiary);margin-top:14px;">Made with Claude Code · sort every pole to one flavor to win</p>
+</div>
+
+<script>
+(function(){
+  const STEP=23;
+  const dough='#e7ad72', doughDark='#c2884c', hole='#a8763c';
+  const F=[
+    {f:'#ff6fa3',n:'strawberry'},
+    {f:'#5fb84f',n:'matcha'},
+    {f:'#4f8be0',n:'blueberry'},
+    {f:'#ffc73d',n:'lemon'},
+    {f:'#a86cd6',n:'grape'},
+    {f:'#8a5230',n:'cocoa'},
+    {f:'#ff8a3c',n:'mango'}
+  ];
+  const sprinkleCols=['#ffffff','#ffd23f','#ff5d8f','#5fb84f','#4f8be0','#a86cd6'];
+  const sprinkles=F.map((_,fi)=>{
+    const arr=[];
+    for(let k=0;k<6;k++){
+      arr.push({x:14+Math.random()*52,y:8+Math.random()*9,r:Math.floor(Math.random()*180),c:sprinkleCols[(k+fi*2)%sprinkleCols.length]});
+    }
+    return arr;
+  });
+
+  function donutSVG(c){
+    const fl=F[c];
+    const sp=sprinkles[c].map(s=>`<rect x="${s.x.toFixed(1)}" y="${s.y.toFixed(1)}" width="6" height="2.4" rx="1.2" fill="${s.c}" transform="rotate(${s.r} ${(s.x+3).toFixed(1)} ${(s.y+1).toFixed(1)})"/>`).join('');
+    const drips=[18,38,58].map(x=>`<circle cx="${x}" cy="27" r="3.4" fill="${fl.f}"/>`).join('');
+    return `<svg width="82" height="36" viewBox="0 0 82 36" aria-hidden="true">
+      <ellipse cx="41" cy="22" rx="39" ry="13" fill="${dough}" stroke="${doughDark}" stroke-width="1.5"/>
+      ${drips}
+      <ellipse cx="41" cy="16" rx="36" ry="12" fill="${fl.f}"/>
+      <ellipse cx="32" cy="11" rx="17" ry="3.6" fill="#ffffff" opacity="0.30"/>
+      ${sp}
+      <ellipse cx="41" cy="19.5" rx="9" ry="3.3" fill="${hole}"/>
+      <ellipse cx="41" cy="18.6" rx="9" ry="2.8" fill="#000000" opacity="0.18"/>
+    </svg>`;
+  }
+
+  const LEVELS=[
+    {colors:3,cap:4,empty:2},
+    {colors:4,cap:4,empty:2},
+    {colors:4,cap:4,empty:1},
+    {colors:5,cap:4,empty:2},
+    {colors:5,cap:5,empty:2},
+    {colors:6,cap:4,empty:2},
+    {colors:6,cap:5,empty:2},
+    {colors:7,cap:4,empty:2}
+  ];
+
+  let S={idx:0,poles:[],cap:4,sel:null,moves:0,hist:[],placed:null,start:[]};
+
+  const clone=p=>p.map(x=>x.slice());
+  function topRun(p){if(!p.length)return null;const c=p[p.length-1];let n=1;for(let i=p.length-2;i>=0;i--){if(p[i]===c)n++;else break;}return {c,n};}
+  function solvedState(ps,cap){return ps.every(p=>p.length===0||(p.length===cap&&p.every(x=>x===p[0])));}
+
+  function solvable(poles,cap){
+    const visited=new Set();let nodes=0;const BUDGET=120000;
+    function key(ps){return ps.map(p=>p.join(',')).sort().join('|');}
+    function dfs(ps){
+      if(solvedState(ps,cap))return true;
+      if(++nodes>BUDGET)return false;
+      const k=key(ps);if(visited.has(k))return false;visited.add(k);
+      for(let s=0;s<ps.length;s++){
+        const src=ps[s];if(!src.length)continue;
+        const run=topRun(src);
+        for(let d=0;d<ps.length;d++){
+          if(d===s)continue;const dst=ps[d];
+          if(dst.length>=cap)continue;
+          if(dst.length&&dst[dst.length-1]!==run.c)continue;
+          if(!dst.length&&run.n===src.length)continue;
+          const space=cap-dst.length;const mv=Math.min(run.n,space);
+          const ns=ps.map((p,i)=>i===s?p.slice(0,p.length-mv):i===d?p.concat(Array(mv).fill(run.c)):p);
+          if(dfs(ns))return true;
+        }
+      }
+      return false;
+    }
+    return dfs(clone(poles));
+  }
+
+  function deal(def){
+    const {colors,cap,empty}=def;
+    let last=null;
+    for(let t=0;t<24;t++){
+      const flat=[];
+      for(let c=0;c<colors;c++)for(let k=0;k<cap;k++)flat.push(c);
+      for(let i=flat.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[flat[i],flat[j]]=[flat[j],flat[i]];}
+      const poles=[];
+      for(let c=0;c<colors;c++)poles.push(flat.slice(c*cap,c*cap+cap));
+      for(let e=0;e<empty;e++)poles.push([]);
+      last=poles;
+      if(!solvedState(poles,cap)&&solvable(poles,cap))return poles;
+    }
+    return last;
+  }
+
+  const $=id=>document.getElementById(id);
+
+  function render(){
+    const board=$('ds-board');
+    board.innerHTML=S.poles.map((pole,i)=>{
+      const sel=S.sel===i;const run=sel?topRun(pole):null;
+      const donuts=pole.map((c,idx)=>{
+        const lift=sel&&run&&idx>=pole.length-run.n;
+        const drop=S.placed&&S.placed.pole===i&&idx>=pole.length-S.placed.count;
+        return `<div class="donut${lift?' lift':''}${drop?' drop':''}" style="bottom:${idx*STEP}px">${donutSVG(c)}</div>`;
+      }).join('');
+      return `<button class="pole${sel?' sel':''}" data-i="${i}" style="height:${S.cap*STEP+46}px" aria-label="Pole ${i+1}, ${pole.length} donuts">
+        <div class="glow"></div><div class="stick"></div>
+        <div class="stack">${donuts}</div><div class="base"></div></button>`;
+    }).join('');
+    Array.from(board.querySelectorAll('.pole')).forEach(b=>b.addEventListener('click',()=>click(+b.dataset.i)));
+    $('ds-level').textContent=`Level ${S.idx+1} of ${LEVELS.length}`;
+    $('ds-moves').textContent=`Moves: ${S.moves}`;
+    $('ds-undo').disabled=!S.hist.length;
+    S.placed=null;
+  }
+
+  function click(i){
+    if($('ds-overlay').style.display!=='none')return;
+    const pole=S.poles[i];
+    if(S.sel===null){if(pole.length){S.sel=i;render();}return;}
+    if(S.sel===i){S.sel=null;render();return;}
+    const src=S.poles[S.sel];const run=topRun(src);
+    const dst=pole;const space=S.cap-dst.length;
+    const ok=run&&space>0&&(dst.length===0||dst[dst.length-1]===run.c);
+    if(ok){
+      const mv=Math.min(run.n,space);
+      S.hist.push({poles:clone(S.poles),moves:S.moves});
+      const from=S.sel;
+      S.poles[from]=src.slice(0,src.length-mv);
+      S.poles[i]=dst.concat(Array(mv).fill(run.c));
+      S.moves++;S.sel=null;S.placed={pole:i,count:mv};
+      render();
+      if(solvedState(S.poles,S.cap))setTimeout(win,260);
+    }else{
+      S.sel=pole.length?i:null;render();
+    }
+  }
+
+  function loadLevel(idx){
+    S.idx=idx;const def=LEVELS[idx];S.cap=def.cap;
+    S.start=deal(def);S.poles=clone(S.start);
+    S.sel=null;S.moves=0;S.hist=[];S.placed=null;
+    $('ds-overlay').style.display='none';
+    render();
+  }
+
+  function win(){
+    const o=$('ds-overlay');
+    $('ds-win-sub').textContent=`Solved in ${S.moves} move${S.moves===1?'':'s'}.`;
+    $('ds-win-art').innerHTML=[0,3,1].map(c=>donutSVG(c)).join('');
+    const last=S.idx===LEVELS.length-1;
+    $('ds-next').innerHTML=last?'<i class="ti ti-trophy"></i> Play again':'Next level <i class="ti ti-arrow-right"></i>';
+    o.style.display='flex';
+    confetti(o);
+  }
+
+  function confetti(o){
+    o.querySelectorAll('.confetti').forEach(e=>e.remove());
+    for(let k=0;k<28;k++){
+      const d=document.createElement('div');
+      d.className='confetti';
+      d.innerHTML=donutSVG(Math.floor(Math.random()*F.length));
+      d.style.left=Math.round(Math.random()*100)+'%';
+      d.style.transform='scale('+(0.45+Math.random()*0.45).toFixed(2)+')';
+      d.style.animationDuration=(1.6+Math.random()*1.6).toFixed(2)+'s';
+      d.style.animationDelay=(Math.random()*0.6).toFixed(2)+'s';
+      o.appendChild(d);
+      setTimeout(()=>d.remove(),3800);
+    }
+  }
+
+  $('ds-undo').addEventListener('click',()=>{if(!S.hist.length)return;const h=S.hist.pop();S.poles=h.poles;S.moves=h.moves;S.sel=null;render();});
+  $('ds-restart').addEventListener('click',()=>{S.poles=clone(S.start);S.sel=null;S.moves=0;S.hist=[];render();});
+  $('ds-new').addEventListener('click',()=>loadLevel(S.idx));
+  $('ds-next').addEventListener('click',()=>loadLevel(S.idx===LEVELS.length-1?0:S.idx+1));
+
+  loadLevel(0);
+})();
+</script>
+</body>
+</html>
