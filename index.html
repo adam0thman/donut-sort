@@ -7,7 +7,6 @@
 <meta name="description" content="Donut Sort — a fun donut-stacking puzzle game.">
 <title>Donut Sort</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='44' fill='%23ff6fa3'/><circle cx='50' cy='50' r='15' fill='%23a8763c'/></svg>">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.34.0/dist/tabler-icons.min.css">
 <style>
 :root{
   --color-text-primary:#241d16;
@@ -64,6 +63,7 @@ body{
 @keyframes ds-fall{to{transform:translateY(640px) rotate(540deg);opacity:.9;}}
 @keyframes ds-pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+.ic{width:1.05em;height:1.05em;vertical-align:-0.16em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 @media (max-width:430px){
   .pole{width:84px;}
   .pole .base{width:72px;}
@@ -81,9 +81,9 @@ body{
   </div>
   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
     <span id="ds-moves" style="font-size:13px;color:var(--color-text-secondary);min-width:64px;"></span>
-    <button class="btn" id="ds-undo"><i class="ti ti-arrow-back-up" aria-hidden="true"></i> Undo</button>
-    <button class="btn" id="ds-restart"><i class="ti ti-refresh" aria-hidden="true"></i> Restart</button>
-    <button class="btn" id="ds-new"><i class="ti ti-dice-3" aria-hidden="true"></i> New deal</button>
+    <button class="btn" id="ds-undo"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14l-4 -4l4 -4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></svg> Undo</button>
+    <button class="btn" id="ds-restart"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg> Restart</button>
+    <button class="btn" id="ds-new"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="8.5" cy="8.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.1" fill="currentColor" stroke="none"/></svg> New deal</button>
   </div>
 </div>
 
@@ -257,7 +257,9 @@ body{
     $('ds-win-sub').textContent=`Solved in ${S.moves} move${S.moves===1?'':'s'}.`;
     $('ds-win-art').innerHTML=[0,3,1].map(c=>donutSVG(c)).join('');
     const last=S.idx===LEVELS.length-1;
-    $('ds-next').innerHTML=last?'<i class="ti ti-trophy"></i> Play again':'Next level <i class="ti ti-arrow-right"></i>';
+    const trophy='<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10"/><path d="M17 4v8a5 5 0 0 1 -10 0v-8"/><path d="M5 9a2 2 0 1 1 2 -2"/><path d="M19 9a2 2 0 1 0 -2 -2"/></svg>';
+    const arrow='<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M13 18l6 -6"/><path d="M13 6l6 6"/></svg>';
+    $('ds-next').innerHTML=last?(trophy+' Play again'):('Next level '+arrow);
     o.style.display='flex';
     confetti(o);
   }
