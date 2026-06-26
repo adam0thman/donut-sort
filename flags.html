@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#3a86ff">
+<title>Flag Quiz</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 90 60'><rect width='30' height='60' fill='%230055A4'/><rect x='30' width='30' height='60' fill='%23fff'/><rect x='60' width='30' height='60' fill='%23EF4135'/></svg>">
+<style>
+:root{--tx:#1e2a3a;--fs:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--br-xl:22px;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{font-family:var(--fs);color:var(--tx);min-height:100vh;
+  background:linear-gradient(160deg,#a9e4ff 0%,#7aa6ff 52%,#b9a7ff 100%) fixed;
+  display:flex;justify-content:center;
+  padding:max(14px,env(safe-area-inset-top)) 14px max(16px,env(safe-area-inset-bottom));}
+#wrap{width:100%;max-width:540px;}
+.topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.back-btn{display:inline-flex;align-items:center;gap:8px;font-family:inherit;font-size:18px;font-weight:800;color:#fff;background:#2f6bdb;border:none;border-radius:999px;padding:13px 22px;cursor:pointer;box-shadow:0 5px 0 #1f4ea8;text-decoration:none;transition:transform .08s,box-shadow .08s;touch-action:manipulation;}
+.back-btn:active{transform:translateY(4px);box-shadow:0 1px 0 #1f4ea8;}
+.title{font-size:30px;font-weight:800;color:#fff;text-shadow:0 3px 0 #2f6bdb,0 4px 6px rgba(0,0,0,.18);margin-left:4px;}
+.headrow{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.pill{font-size:15px;font-weight:800;color:#1f4ea8;background:#fff;padding:6px 14px;border-radius:999px;box-shadow:0 2px 0 rgba(0,0,0,.08);}
+.btn{font-family:inherit;font-size:15px;font-weight:800;color:#1e2a3a;background:#fff;border:none;border-radius:999px;padding:10px 14px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.12);transition:transform .08s,box-shadow .08s;touch-action:manipulation;}
+.btn:active{transform:translateY(3px);box-shadow:0 0 0 rgba(0,0,0,.12);}
+.ic{width:1.1em;height:1.1em;vertical-align:-.18em;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
+.card{background:rgba(255,255,255,.82);border-radius:var(--br-xl);padding:18px 16px 20px;text-align:center;box-shadow:0 8px 0 rgba(0,0,0,.07);position:relative;overflow:hidden;}
+.flagbox{width:240px;max-width:80%;margin:4px auto 0;border-radius:14px;overflow:hidden;border:3px solid #fff;box-shadow:0 5px 0 rgba(0,0,0,.16);background:#fff;animation:flagin .35s ease;}
+@keyframes flagin{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.flagbox svg{display:block;width:100%;height:auto;}
+.q{font-size:19px;font-weight:800;color:#3a4a5e;margin:16px 4px 2px;}
+.answers{display:grid;gap:11px;margin-top:12px;}
+.ans{font-family:inherit;font-size:20px;font-weight:800;color:#1e2a3a;background:#fff;border:none;border-radius:16px;padding:16px;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.14);transition:transform .08s,box-shadow .08s,background .15s;touch-action:manipulation;}
+.ans:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.14);}
+.ans.good{background:#34d399;color:#fff;box-shadow:0 5px 0 #1f9e72;animation:cheer .5s ease;}
+.ans.bad{background:#ff8a8a;color:#fff;box-shadow:0 5px 0 #d65a5a;animation:shake .4s ease;}
+@keyframes cheer{0%,100%{transform:scale(1)}40%{transform:scale(1.05)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.confetti{position:absolute;top:-40px;animation:fall linear forwards;pointer-events:none;font-size:26px;}
+@keyframes fall{to{transform:translateY(620px) rotate(540deg);opacity:.9;}}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+@media (max-width:430px){.title{font-size:25px;}.ans{font-size:18px;padding:14px;}}
+</style>
+</head>
+<body>
+<div id="wrap">
+<h1 class="sr-only">Flag Quiz game</h1>
+<div class="topbar">
+  <a class="back-btn" href="index.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6l6 6"/></svg> Back</a>
+  <span class="title">🌍 Flag Quiz</span>
+</div>
+
+<div class="headrow">
+  <span class="pill" id="fq-streak" style="color:#c2410c;">🔥 Streak: 0</span>
+  <span class="pill" id="fq-best">🏆 Best: 0</span>
+  <button class="btn" id="fq-sound" aria-label="Toggle sound"></button>
+</div>
+
+<div class="card">
+  <div class="flagbox" id="fq-flag"></div>
+  <p class="q">Which country is this flag?</p>
+  <div class="answers" id="fq-answers"></div>
+</div>
+</div>
+
+<script>
+(function(){
+  let muted=false,_ac;
+  function AC(){if(!_ac){try{_ac=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(_ac&&_ac.state==='suspended')_ac.resume();return _ac;}
+  function tone(f,t0,dur,type,vol){const ac=AC();if(!ac||muted)return;const o=ac.createOscillator(),g=ac.createGain();o.type=type||'sine';o.frequency.value=f;const t=ac.currentTime+t0;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||0.22,t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+dur+0.03);}
+  const sYay=()=>{tone(660,0,0.12,'sine',0.24);tone(990,0.09,0.16,'sine',0.2);};
+  const sNope=()=>{tone(300,0,0.13,'sine',0.15);tone(220,0.11,0.16,'sine',0.15);};
+  const sBig=()=>[523,659,784,1047].forEach((f,i)=>tone(f,i*0.1,0.26,'triangle',0.22));
+
+  const C=[
+    {n:'Japan',s:`<rect width="90" height="60" fill="#fff"/><circle cx="45" cy="30" r="17" fill="#bc002d"/>`},
+    {n:'France',s:`<rect width="30" height="60" fill="#0055A4"/><rect x="30" width="30" height="60" fill="#fff"/><rect x="60" width="30" height="60" fill="#EF4135"/>`},
+    {n:'Italy',s:`<rect width="30" height="60" fill="#008C45"/><rect x="30" width="30" height="60" fill="#F4F5F0"/><rect x="60" width="30" height="60" fill="#CD212A"/>`},
+    {n:'Ireland',s:`<rect width="30" height="60" fill="#169B62"/><rect x="30" width="30" height="60" fill="#fff"/><rect x="60" width="30" height="60" fill="#FF883E"/>`},
+    {n:'Belgium',s:`<rect width="30" height="60" fill="#000"/><rect x="30" width="30" height="60" fill="#FAE042"/><rect x="60" width="30" height="60" fill="#ED2939"/>`},
+    {n:'Nigeria',s:`<rect width="30" height="60" fill="#008751"/><rect x="30" width="30" height="60" fill="#fff"/><rect x="60" width="30" height="60" fill="#008751"/>`},
+    {n:'Romania',s:`<rect width="30" height="60" fill="#002B7F"/><rect x="30" width="30" height="60" fill="#FCD116"/><rect x="60" width="30" height="60" fill="#CE1126"/>`},
+    {n:'Germany',s:`<rect width="90" height="20" fill="#000"/><rect y="20" width="90" height="20" fill="#DD0000"/><rect y="40" width="90" height="20" fill="#FFCE00"/>`},
+    {n:'Netherlands',s:`<rect width="90" height="20" fill="#AE1C28"/><rect y="20" width="90" height="20" fill="#fff"/><rect y="40" width="90" height="20" fill="#21468B"/>`},
+    {n:'Russia',s:`<rect width="90" height="20" fill="#fff"/><rect y="20" width="90" height="20" fill="#0039A6"/><rect y="40" width="90" height="20" fill="#D52B1E"/>`},
+    {n:'Hungary',s:`<rect width="90" height="20" fill="#CD2A3E"/><rect y="20" width="90" height="20" fill="#fff"/><rect y="40" width="90" height="20" fill="#436F4D"/>`},
+    {n:'Austria',s:`<rect width="90" height="20" fill="#ED2939"/><rect y="20" width="90" height="20" fill="#fff"/><rect y="40" width="90" height="20" fill="#ED2939"/>`},
+    {n:'Lithuania',s:`<rect width="90" height="20" fill="#FDB913"/><rect y="20" width="90" height="20" fill="#006A44"/><rect y="40" width="90" height="20" fill="#C1272D"/>`},
+    {n:'Estonia',s:`<rect width="90" height="20" fill="#0072CE"/><rect y="20" width="90" height="20" fill="#000"/><rect y="40" width="90" height="20" fill="#fff"/>`},
+    {n:'Poland',s:`<rect width="90" height="30" fill="#fff"/><rect y="30" width="90" height="30" fill="#DC143C"/>`},
+    {n:'Ukraine',s:`<rect width="90" height="30" fill="#0057B7"/><rect y="30" width="90" height="30" fill="#FFD700"/>`},
+    {n:'Spain',s:`<rect width="90" height="60" fill="#AA151B"/><rect y="15" width="90" height="30" fill="#F1BF00"/>`},
+    {n:'Sweden',s:`<rect width="90" height="60" fill="#006AA7"/><rect x="24" width="9" height="60" fill="#FECC00"/><rect y="25.5" width="90" height="9" fill="#FECC00"/>`},
+    {n:'Denmark',s:`<rect width="90" height="60" fill="#C60C30"/><rect x="24" width="9" height="60" fill="#fff"/><rect y="25.5" width="90" height="9" fill="#fff"/>`},
+    {n:'Finland',s:`<rect width="90" height="60" fill="#fff"/><rect x="24" width="9" height="60" fill="#002F6C"/><rect y="25.5" width="90" height="9" fill="#002F6C"/>`},
+    {n:'Norway',s:`<rect width="90" height="60" fill="#BA0C2F"/><rect x="22.5" width="12" height="60" fill="#fff"/><rect y="24" width="90" height="12" fill="#fff"/><rect x="25.5" width="6" height="60" fill="#00205B"/><rect y="27" width="90" height="6" fill="#00205B"/>`},
+    {n:'Switzerland',s:`<rect width="90" height="60" fill="#D52B1E"/><rect x="41" y="16" width="8" height="28" fill="#fff"/><rect x="31" y="26" width="28" height="8" fill="#fff"/>`},
+    {n:'Thailand',s:`<rect width="90" height="60" fill="#A51931"/><rect y="10" width="90" height="10" fill="#fff"/><rect y="20" width="90" height="20" fill="#2D2A4A"/><rect y="40" width="90" height="10" fill="#fff"/>`},
+    {n:'Greece',s:`<rect width="90" height="60" fill="#0D5EAF"/><rect y="6.67" width="90" height="6.67" fill="#fff"/><rect y="20" width="90" height="6.67" fill="#fff"/><rect y="33.3" width="90" height="6.67" fill="#fff"/><rect y="46.67" width="90" height="6.67" fill="#fff"/><rect width="33.3" height="33.3" fill="#0D5EAF"/><rect x="13.3" width="6.67" height="33.3" fill="#fff"/><rect y="13.3" width="33.3" height="6.67" fill="#fff"/>`}
+  ];
+
+  let streak=0,best=0,answered=false,cur=null,last=null;
+  const $=id=>document.getElementById(id);
+  try{best=parseInt(localStorage.getItem('flagBest')||'0',10)||0;}catch(e){}
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  function speak(t){if(muted||!('speechSynthesis'in window))return;try{const u=new SpeechSynthesisUtterance(t);u.rate=0.95;u.pitch=1.05;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
+
+  function nOptions(){return streak<3?3:streak<7?4:5;}
+  function next(){
+    answered=false;
+    let pool=C.filter(c=>c!==last);
+    cur=pool[Math.floor(Math.random()*pool.length)];last=cur;
+    $('fq-flag').innerHTML=`<svg viewBox="0 0 90 60" aria-label="flag">${cur.s}</svg>`;
+    const n=nOptions();
+    const others=shuffle(C.filter(c=>c.n!==cur.n)).slice(0,n-1).map(c=>c.n);
+    const opts=shuffle([cur.n,...others]);
+    $('fq-answers').innerHTML=opts.map(o=>`<button class="ans" data-a="${o}">${o}</button>`).join('');
+    Array.from($('fq-answers').querySelectorAll('.ans')).forEach(b=>b.addEventListener('click',()=>pick(b)));
+    upd();
+  }
+  function upd(){$('fq-streak').textContent='🔥 Streak: '+streak;$('fq-best').textContent='🏆 Best: '+best;}
+  function pick(btn){
+    AC();if(answered)return;answered=true;
+    const val=btn.dataset.a;const ans=$('fq-answers');
+    if(val===cur.n){
+      btn.classList.add('good');streak++;
+      if(streak>best){best=streak;try{localStorage.setItem('flagBest',String(best));}catch(e){}}
+      upd();
+      if(streak>0&&streak%5===0){sBig();partyConfetti();}else sYay();
+      speak(cur.n);
+      setTimeout(next,950);
+    }else{
+      btn.classList.add('bad');sNope();
+      Array.from(ans.querySelectorAll('.ans')).forEach(b=>{if(b.dataset.a===cur.n)b.classList.add('good');});
+      streak=0;upd();
+      setTimeout(next,1700);
+    }
+  }
+  function partyConfetti(){const e=['🌍','⭐','🎉','🏳️','✨'];for(let k=0;k<24;k++){const d=document.createElement('div');d.className='confetti';d.textContent=e[Math.floor(Math.random()*e.length)];d.style.left=Math.round(Math.random()*100)+'%';d.style.fontSize=(20+Math.random()*16)+'px';d.style.animationDuration=(1.6+Math.random()*1.4).toFixed(2)+'s';d.style.animationDelay=(Math.random()*0.4).toFixed(2)+'s';document.querySelector('.card').appendChild(d);setTimeout(()=>d.remove(),3400);}}
+
+  function updSound(){$('fq-sound').textContent=muted?'🔇':'🔊';}
+  $('fq-sound').addEventListener('click',()=>{muted=!muted;updSound();if(muted&&'speechSynthesis'in window)speechSynthesis.cancel();else{AC();sYay();}});
+  updSound();next();
+})();
+</script>
+</body>
+</html>
