@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#ffa6c9">
+<title>Donut Sort</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='44' fill='%23ff6fa3'/><circle cx='50' cy='50' r='15' fill='%23fff'/></svg>">
+<style>
+:root{
+  --tx:#3a2a1e;--tx2:#7a6757;--panel:#ffffff;
+  --br-md:10px;--br-lg:16px;--br-xl:22px;
+  --fs:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{font-family:var(--fs);color:var(--tx);min-height:100vh;
+  background:linear-gradient(160deg,#ffe29f 0%,#ffa6c9 48%,#a18bff 100%) fixed;
+  display:flex;justify-content:center;
+  padding:max(14px,env(safe-area-inset-top)) 14px max(16px,env(safe-area-inset-bottom));}
+#wrap{width:100%;max-width:740px;}
+.topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.back-btn{display:inline-flex;align-items:center;gap:8px;font-family:inherit;font-size:18px;font-weight:800;
+  color:#fff;background:#7b4dff;border:none;border-radius:999px;padding:13px 22px;cursor:pointer;
+  box-shadow:0 5px 0 #5a32d6;text-decoration:none;transition:transform .08s,box-shadow .08s;touch-action:manipulation;}
+.back-btn:active{transform:translateY(4px);box-shadow:0 1px 0 #5a32d6;}
+.title{font-size:30px;font-weight:800;letter-spacing:.3px;color:#fff;text-shadow:0 3px 0 #e26aa0,0 4px 6px rgba(0,0,0,.18);margin-left:4px;}
+.headrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.pill{font-size:13px;font-weight:700;color:#7b4dff;background:#fff;padding:4px 12px;border-radius:999px;box-shadow:0 2px 0 rgba(0,0,0,.08);}
+.btn{font-family:inherit;font-size:14px;font-weight:700;color:#3a2a1e;background:#fff;border:none;border-radius:999px;
+  padding:9px 15px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.12);transition:transform .08s,box-shadow .08s;touch-action:manipulation;}
+.btn:active{transform:translateY(3px);box-shadow:0 0 0 rgba(0,0,0,.12);}
+.btn:disabled{opacity:.45;}
+.ic{width:1.1em;height:1.1em;vertical-align:-.18em;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
+.donut{position:absolute;left:50%;transform:translateX(-50%);transition:bottom .18s ease,transform .15s ease;will-change:transform;}
+.donut.lift{transform:translateX(-50%) translateY(-18px) scale(1.05);}
+.donut.drop{animation:ds-drop .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes ds-drop{0%{transform:translateX(-50%) translateY(-34px)}100%{transform:translateX(-50%) translateY(0)}}
+.pole{position:relative;width:92px;border:none;background:transparent;padding:0;cursor:pointer;flex:0 0 auto;touch-action:manipulation;}
+.pole .stick{position:absolute;left:50%;transform:translateX(-50%);width:10px;top:16px;bottom:18px;background:#d7a86b;border:1px solid #b07f49;border-radius:6px;}
+.pole .base{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:78px;height:15px;border-radius:50%;background:#cf9a5d;border:1px solid #ab7940;}
+.pole .glow{position:absolute;inset:8px 4px 2px;border-radius:14px;transition:background .15s;}
+.pole.sel .glow{background:rgba(255,210,90,.28);box-shadow:0 0 0 3px rgba(255,170,30,.7) inset;}
+.stack{position:absolute;bottom:18px;left:0;right:0;}
+.panel{background:rgba(255,255,255,.78);border-radius:var(--br-xl);padding:18px 10px 14px;position:relative;overflow:hidden;box-shadow:0 8px 0 rgba(0,0,0,.06);}
+.confetti{position:absolute;top:-40px;animation:ds-fall linear forwards;pointer-events:none;}
+@keyframes ds-fall{to{transform:translateY(680px) rotate(540deg);opacity:.9;}}
+@keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+@media (max-width:430px){.pole{width:82px;}.pole .base{width:70px;}.title{font-size:25px;}}
+</style>
+</head>
+<body>
+<div id="wrap">
+<h1 class="sr-only">Donut Sort game</h1>
+<div class="topbar">
+  <a class="back-btn" href="index.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6l6 6"/></svg> Back</a>
+  <span class="title">🍩 Donut Sort</span>
+</div>
+
+<div class="headrow">
+  <span class="pill" id="ds-level"></span>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+    <span class="pill" id="ds-moves" style="color:#7a6757;background:rgba(255,255,255,.7);"></span>
+    <button class="btn" id="ds-sound" aria-label="Toggle sound"></button>
+    <button class="btn" id="ds-undo"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14l-4 -4l4 -4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></svg> Undo</button>
+    <button class="btn" id="ds-restart"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></svg> Restart</button>
+    <button class="btn" id="ds-new"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="8.5" cy="8.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.1" fill="currentColor" stroke="none"/></svg> New</button>
+  </div>
+</div>
+
+<p style="font-size:14px;font-weight:600;color:#5a4636;margin:0 0 10px;">Tap a pole to lift its top donuts, then tap another pole to drop them. Same flavor on same flavor! 🍩</p>
+
+<div class="panel">
+  <div id="ds-board" style="display:flex;flex-wrap:wrap;gap:14px 6px;justify-content:center;align-items:flex-end;min-height:170px;"></div>
+  <div id="ds-overlay" style="display:none;position:absolute;inset:0;background:rgba(40,20,40,.5);backdrop-filter:blur(2px);align-items:center;justify-content:center;flex-direction:column;z-index:5;">
+    <div style="background:#fff;border-radius:var(--br-xl);padding:26px 30px;text-align:center;max-width:330px;animation:pop .4s ease;box-shadow:0 10px 0 rgba(0,0,0,.12);">
+      <div id="ds-win-art" style="font-size:0;margin-bottom:10px;"></div>
+      <div style="font-size:24px;font-weight:800;color:#7b4dff;">Yay! Cleared! 🎉</div>
+      <div id="ds-win-sub" style="font-size:15px;color:#7a6757;margin:6px 0 18px;font-weight:600;"></div>
+      <button class="btn" id="ds-next" style="background:#ff5fa2;color:#fff;font-size:18px;font-weight:800;padding:13px 26px;box-shadow:0 5px 0 #d23c80;"></button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+(function(){
+  let muted=false,_ac;
+  function AC(){if(!_ac){try{_ac=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(_ac&&_ac.state==='suspended')_ac.resume();return _ac;}
+  function tone(f,t0,dur,type,vol){const ac=AC();if(!ac||muted)return;const o=ac.createOscillator(),g=ac.createGain();o.type=type||'sine';o.frequency.value=f;const t=ac.currentTime+t0;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||0.2,t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+dur+0.03);}
+  const sPop=()=>{tone(523,0,0.12,'triangle',0.22);tone(784,0.06,0.12,'triangle',0.16);};
+  const sWin=()=>[523,659,784,1047,1319].forEach((f,i)=>tone(f,i*0.12,0.3,'triangle',0.25));
+
+  const STEP=23,dough='#e7ad72',doughDark='#c2884c',hole='#a8763c';
+  const F=[{f:'#ff6fa3'},{f:'#5fb84f'},{f:'#4f8be0'},{f:'#ffc73d'},{f:'#a86cd6'},{f:'#8a5230'},{f:'#ff8a3c'}];
+  const spCols=['#ffffff','#ffd23f','#ff5d8f','#5fb84f','#4f8be0','#a86cd6'];
+  const sprinkles=F.map((_,fi)=>{const a=[];for(let k=0;k<6;k++)a.push({x:14+Math.random()*52,y:8+Math.random()*9,r:Math.floor(Math.random()*180),c:spCols[(k+fi*2)%spCols.length]});return a;});
+  function donutSVG(c){const fl=F[c];const sp=sprinkles[c].map(s=>`<rect x="${s.x.toFixed(1)}" y="${s.y.toFixed(1)}" width="6" height="2.4" rx="1.2" fill="${s.c}" transform="rotate(${s.r} ${(s.x+3).toFixed(1)} ${(s.y+1).toFixed(1)})"/>`).join('');const drips=[18,38,58].map(x=>`<circle cx="${x}" cy="27" r="3.4" fill="${fl.f}"/>`).join('');
+    return `<svg width="82" height="36" viewBox="0 0 82 36" aria-hidden="true"><ellipse cx="41" cy="22" rx="39" ry="13" fill="${dough}" stroke="${doughDark}" stroke-width="1.5"/>${drips}<ellipse cx="41" cy="16" rx="36" ry="12" fill="${fl.f}"/><ellipse cx="32" cy="11" rx="17" ry="3.6" fill="#fff" opacity="0.3"/>${sp}<ellipse cx="41" cy="19.5" rx="9" ry="3.3" fill="${hole}"/><ellipse cx="41" cy="18.6" rx="9" ry="2.8" fill="#000" opacity="0.18"/></svg>`;}
+
+  const LEVELS=[{colors:3,cap:4,empty:2},{colors:4,cap:4,empty:2},{colors:4,cap:4,empty:1},{colors:5,cap:4,empty:2},{colors:5,cap:5,empty:2},{colors:6,cap:4,empty:2},{colors:6,cap:5,empty:2},{colors:7,cap:4,empty:2}];
+  let S={idx:0,poles:[],cap:4,sel:null,moves:0,hist:[],placed:null,start:[]};
+  const clone=p=>p.map(x=>x.slice());
+  function topRun(p){if(!p.length)return null;const c=p[p.length-1];let n=1;for(let i=p.length-2;i>=0;i--){if(p[i]===c)n++;else break;}return{c,n};}
+  function solvedState(ps,cap){return ps.every(p=>p.length===0||(p.length===cap&&p.every(x=>x===p[0])));}
+  function solvable(poles,cap){const visited=new Set();let nodes=0;const B=120000;
+    function key(ps){return ps.map(p=>p.join(',')).sort().join('|');}
+    function dfs(ps){if(solvedState(ps,cap))return true;if(++nodes>B)return false;const k=key(ps);if(visited.has(k))return false;visited.add(k);
+      for(let s=0;s<ps.length;s++){const src=ps[s];if(!src.length)continue;const run=topRun(src);
+        for(let d=0;d<ps.length;d++){if(d===s)continue;const dst=ps[d];if(dst.length>=cap)continue;if(dst.length&&dst[dst.length-1]!==run.c)continue;if(!dst.length&&run.n===src.length)continue;const mv=Math.min(run.n,cap-dst.length);const ns=ps.map((p,i)=>i===s?p.slice(0,p.length-mv):i===d?p.concat(Array(mv).fill(run.c)):p);if(dfs(ns))return true;}}return false;}
+    return dfs(clone(poles));}
+  function deal(def){const{colors,cap,empty}=def;let last=null;for(let t=0;t<24;t++){const flat=[];for(let c=0;c<colors;c++)for(let k=0;k<cap;k++)flat.push(c);for(let i=flat.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[flat[i],flat[j]]=[flat[j],flat[i]];}const poles=[];for(let c=0;c<colors;c++)poles.push(flat.slice(c*cap,c*cap+cap));for(let e=0;e<empty;e++)poles.push([]);last=poles;if(!solvedState(poles,cap)&&solvable(poles,cap))return poles;}return last;}
+  const $=id=>document.getElementById(id);
+  function render(){const board=$('ds-board');board.innerHTML=S.poles.map((pole,i)=>{const sel=S.sel===i;const run=sel?topRun(pole):null;const donuts=pole.map((c,idx)=>{const lift=sel&&run&&idx>=pole.length-run.n;const drop=S.placed&&S.placed.pole===i&&idx>=pole.length-S.placed.count;return `<div class="donut${lift?' lift':''}${drop?' drop':''}" style="bottom:${idx*STEP}px">${donutSVG(c)}</div>`;}).join('');return `<button class="pole${sel?' sel':''}" data-i="${i}" style="height:${S.cap*STEP+46}px" aria-label="Pole ${i+1}"><div class="glow"></div><div class="stick"></div><div class="stack">${donuts}</div><div class="base"></div></button>`;}).join('');
+    Array.from(board.querySelectorAll('.pole')).forEach(b=>b.addEventListener('click',()=>click(+b.dataset.i)));
+    $('ds-level').textContent=`Level ${S.idx+1} / ${LEVELS.length}`;$('ds-moves').textContent=`Moves: ${S.moves}`;$('ds-undo').disabled=!S.hist.length;S.placed=null;}
+  function click(i){AC();if($('ds-overlay').style.display!=='none')return;const pole=S.poles[i];
+    if(S.sel===null){if(pole.length){S.sel=i;render();}return;}
+    if(S.sel===i){S.sel=null;render();return;}
+    const src=S.poles[S.sel];const run=topRun(src);const dst=pole;const space=S.cap-dst.length;const ok=run&&space>0&&(dst.length===0||dst[dst.length-1]===run.c);
+    if(ok){const mv=Math.min(run.n,space);S.hist.push({poles:clone(S.poles),moves:S.moves});const from=S.sel;S.poles[from]=src.slice(0,src.length-mv);S.poles[i]=dst.concat(Array(mv).fill(run.c));S.moves++;S.sel=null;S.placed={pole:i,count:mv};sPop();render();if(solvedState(S.poles,S.cap))setTimeout(win,260);}
+    else{S.sel=pole.length?i:null;render();}}
+  function loadLevel(idx){S.idx=idx;const def=LEVELS[idx];S.cap=def.cap;S.start=deal(def);S.poles=clone(S.start);S.sel=null;S.moves=0;S.hist=[];S.placed=null;$('ds-overlay').style.display='none';render();}
+  function win(){sWin();const o=$('ds-overlay');$('ds-win-sub').textContent=`Solved in ${S.moves} move${S.moves===1?'':'s'}!`;$('ds-win-art').innerHTML=[0,3,1].map(c=>donutSVG(c)).join('');const last=S.idx===LEVELS.length-1;$('ds-next').textContent=last?'Play again 🏆':'Next level →';o.style.display='flex';confetti(o);}
+  function confetti(o){o.querySelectorAll('.confetti').forEach(e=>e.remove());for(let k=0;k<30;k++){const d=document.createElement('div');d.className='confetti';d.innerHTML=donutSVG(Math.floor(Math.random()*F.length));d.style.left=Math.round(Math.random()*100)+'%';d.style.transform='scale('+(0.45+Math.random()*0.45).toFixed(2)+')';d.style.animationDuration=(1.6+Math.random()*1.6).toFixed(2)+'s';d.style.animationDelay=(Math.random()*0.6).toFixed(2)+'s';o.appendChild(d);setTimeout(()=>d.remove(),3800);}}
+  function updSound(){$('ds-sound').textContent=muted?'🔇':'🔊';}
+  $('ds-sound').addEventListener('click',()=>{muted=!muted;updSound();if(!muted){AC();sPop();}});
+  $('ds-undo').addEventListener('click',()=>{if(!S.hist.length)return;const h=S.hist.pop();S.poles=h.poles;S.moves=h.moves;S.sel=null;render();});
+  $('ds-restart').addEventListener('click',()=>{S.poles=clone(S.start);S.sel=null;S.moves=0;S.hist=[];render();});
+  $('ds-new').addEventListener('click',()=>loadLevel(S.idx));
+  $('ds-next').addEventListener('click',()=>loadLevel(S.idx===LEVELS.length-1?0:S.idx+1));
+  updSound();loadLevel(0);
+})();
+</script>
+</body>
+</html>

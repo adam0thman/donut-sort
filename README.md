@@ -1,14 +1,21 @@
-# Donut Sort
+# Fun Games 🎈
 
-A fun donut-stacking puzzle game. Sort the towers so each pole holds a single flavor.
+A tiny arcade of colorful games for little kids. No ads, no tracking, no dependencies — just open and play.
 
 **Play it:** https://adam0thman.github.io/donut-sort/
 
-## How to play
-- Tap a pole to lift its top donut(s).
-- Tap another pole to drop them — you can only stack onto an empty pole or a matching flavor.
-- Clear every pole to a single flavor to win and advance.
-- **Undo / Restart / New deal** are there whenever you need them. Every level is verified solvable before it's dealt.
+## Games
+- **🍩 Donut Sort** (ages ~5–7) — sort the donut towers so each pole holds one flavor. 8 levels, undo / restart / new deal, every level verified solvable.
+- **🍓 Yummy Match** (ages ~3–5) — a gentle memory game: tap two cards to find the matching treats. 4 levels that grow from 3 to 8 pairs.
+
+A big friendly **Back** button on every game returns to the game-picker hub. Cheerful sound effects are built in (toggle with the 🔊 button) and work with no audio files — generated with the Web Audio API.
+
+## Pages
+| File | What it is |
+|------|------------|
+| `index.html` | Game-selection hub with tappable cards |
+| `donut-sort.html` | Donut Sort game |
+| `match.html` | Yummy Match memory game |
 
 ## Tech
-A single self-contained `index.html` — no build step, no dependencies (Tabler icons load from a CDN). Just open the file or serve it statically.
+Three self-contained HTML files — no build step, no libraries, no CDN. All icons and art are inline SVG; all sound is Web Audio. Works fully offline once loaded. Just serve the folder statically.
