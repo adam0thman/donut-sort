@@ -38,6 +38,13 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
 .confetti{position:absolute;top:-40px;animation:fall linear forwards;pointer-events:none;font-size:26px;}
 @keyframes fall{to{transform:translateY(620px) rotate(540deg);opacity:.9;}}
+.floatp{position:absolute;left:50%;top:46%;transform:translateX(-50%);font-size:30px;font-weight:800;pointer-events:none;animation:floatup .9s ease-out forwards;text-shadow:0 2px 6px rgba(0,0,0,.18);z-index:6;}
+@keyframes floatup{0%{opacity:0;transform:translate(-50%,12px) scale(.7)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-48px) scale(1.12)}}
+.overlay{position:absolute;inset:0;background:rgba(20,30,50,.6);backdrop-filter:blur(2px);align-items:center;justify-content:center;flex-direction:column;z-index:7;border-radius:var(--br-xl);}
+.panel{background:#fff;border-radius:var(--br-xl);padding:26px 30px;text-align:center;max-width:340px;box-shadow:0 10px 0 rgba(0,0,0,.12);animation:pop .4s ease;}
+@keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.bigbtn{background:#3a86ff;color:#fff;font-size:20px;font-weight:800;padding:14px 30px;border:none;border-radius:999px;cursor:pointer;box-shadow:0 5px 0 #2f6bdb;margin-top:8px;}
+.bigbtn:active{transform:translateY(4px);box-shadow:0 1px 0 #2f6bdb;}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
 @media (max-width:430px){.title{font-size:25px;}.ans{font-size:18px;padding:14px;}}
 </style>
@@ -51,8 +58,9 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
 </div>
 
 <div class="headrow">
-  <span class="pill" id="fq-streak" style="color:#c2410c;">🔥 Streak: 0</span>
-  <span class="pill" id="fq-best">🏆 Best: 0</span>
+  <span class="pill" id="fq-prog">📍 1/10</span>
+  <span class="pill" id="fq-streak" style="color:#c2410c;">🔥 0</span>
+  <span class="pill" id="fq-best">🏆 0</span>
   <button class="btn" id="fq-sound" aria-label="Toggle sound"></button>
 </div>
 
@@ -60,6 +68,14 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
   <div class="flagbox" id="fq-flag"></div>
   <p class="q">Which country is this flag?</p>
   <div class="answers" id="fq-answers"></div>
+  <div class="overlay" id="fq-overlay" style="display:none;">
+    <div class="panel">
+      <div id="fq-stars" style="font-size:42px;line-height:1;margin-bottom:4px;"></div>
+      <div style="font-size:24px;font-weight:800;color:#2f6bdb;">Round complete! 🎉</div>
+      <div id="fq-res" style="font-size:16px;color:#1e2a3a;font-weight:800;margin:8px 0 14px;"></div>
+      <button class="bigbtn" id="fq-again">Play again ▶</button>
+    </div>
+  </div>
 </div>
 </div>
 
@@ -99,14 +115,19 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
     {n:'Greece',s:`<rect width="90" height="60" fill="#0D5EAF"/><rect y="6.67" width="90" height="6.67" fill="#fff"/><rect y="20" width="90" height="6.67" fill="#fff"/><rect y="33.3" width="90" height="6.67" fill="#fff"/><rect y="46.67" width="90" height="6.67" fill="#fff"/><rect width="33.3" height="33.3" fill="#0D5EAF"/><rect x="13.3" width="6.67" height="33.3" fill="#fff"/><rect y="13.3" width="33.3" height="6.67" fill="#fff"/>`}
   ];
 
-  let streak=0,best=0,answered=false,cur=null,last=null;
+  const ROUND=10;
+  let streak=0,best=0,answered=false,cur=null,last=null,qIdx=0,correct=0,combo=0;
   const $=id=>document.getElementById(id);
   try{best=parseInt(localStorage.getItem('flagBest')||'0',10)||0;}catch(e){}
   function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
   function speak(t){if(muted||!('speechSynthesis'in window))return;try{const u=new SpeechSynthesisUtterance(t);u.rate=0.95;u.pitch=1.05;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
+  const PRAISE=['Yes!','Nice!','Great!','Awesome!','Super!','Amazing!','Wow!','On fire!'];
+  function floatPraise(txt,col){const d=document.createElement('div');d.className='floatp';d.textContent=txt;d.style.color=col||'#1f9e72';document.querySelector('.card').appendChild(d);setTimeout(()=>d.remove(),900);}
+  function comboTone(){const f=520+Math.min(combo,9)*55;tone(f,0,0.1,'sine',0.2);tone(f*1.5,0.07,0.12,'sine',0.16);}
 
   function nOptions(){return streak<3?3:streak<7?4:5;}
-  function next(){
+  function nextQ(){
+    if(qIdx>=ROUND){endRound();return;}
     answered=false;
     let pool=C.filter(c=>c!==last);
     cur=pool[Math.floor(Math.random()*pool.length)];last=cur;
@@ -118,29 +139,41 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
     Array.from($('fq-answers').querySelectorAll('.ans')).forEach(b=>b.addEventListener('click',()=>pick(b)));
     upd();
   }
-  function upd(){$('fq-streak').textContent='🔥 Streak: '+streak;$('fq-best').textContent='🏆 Best: '+best;}
+  function upd(){$('fq-prog').textContent='📍 '+Math.min(qIdx+1,ROUND)+'/'+ROUND;$('fq-streak').textContent='🔥 '+streak;$('fq-best').textContent='🏆 '+best;}
   function pick(btn){
     AC();if(answered)return;answered=true;
     const val=btn.dataset.a;const ans=$('fq-answers');
     if(val===cur.n){
-      btn.classList.add('good');streak++;
+      btn.classList.add('good');streak++;combo++;correct++;
       if(streak>best){best=streak;try{localStorage.setItem('flagBest',String(best));}catch(e){}}
-      upd();
-      if(streak>0&&streak%5===0){sBig();partyConfetti();}else sYay();
+      upd();comboTone();
+      const word=combo>=3?PRAISE[Math.min(combo-1,PRAISE.length-1)]:PRAISE[Math.floor(Math.random()*3)];
+      floatPraise((combo>=2?('🔥'+combo+' '):'')+word);
+      if(combo>0&&combo%3===0){sBig();partyConfetti();}
       speak(cur.n);
-      setTimeout(next,950);
+      qIdx++;setTimeout(nextQ,combo>=3?700:900);
     }else{
-      btn.classList.add('bad');sNope();
+      btn.classList.add('bad');sNope();floatPraise('Oops!','#d23c80');
       Array.from(ans.querySelectorAll('.ans')).forEach(b=>{if(b.dataset.a===cur.n)b.classList.add('good');});
-      streak=0;upd();
-      setTimeout(next,1700);
+      streak=0;combo=0;upd();
+      qIdx++;setTimeout(nextQ,1700);
     }
   }
-  function partyConfetti(){const e=['🌍','⭐','🎉','🏳️','✨'];for(let k=0;k<24;k++){const d=document.createElement('div');d.className='confetti';d.textContent=e[Math.floor(Math.random()*e.length)];d.style.left=Math.round(Math.random()*100)+'%';d.style.fontSize=(20+Math.random()*16)+'px';d.style.animationDuration=(1.6+Math.random()*1.4).toFixed(2)+'s';d.style.animationDelay=(Math.random()*0.4).toFixed(2)+'s';document.querySelector('.card').appendChild(d);setTimeout(()=>d.remove(),3400);}}
+  function partyConfetti(){const e=['🌍','⭐','🎉','🏳️','✨'];for(let k=0;k<20;k++){const d=document.createElement('div');d.className='confetti';d.textContent=e[Math.floor(Math.random()*e.length)];d.style.left=Math.round(Math.random()*100)+'%';d.style.fontSize=(18+Math.random()*16)+'px';d.style.animationDuration=(1.5+Math.random()*1.3).toFixed(2)+'s';d.style.animationDelay=(Math.random()*0.3).toFixed(2)+'s';document.querySelector('.card').appendChild(d);setTimeout(()=>d.remove(),3200);}}
+
+  function startRound(){qIdx=0;correct=0;streak=0;combo=0;$('fq-overlay').style.display='none';nextQ();}
+  function endRound(){
+    sBig();
+    const stars=correct>=9?'⭐⭐⭐':correct>=7?'⭐⭐':correct>=4?'⭐':'🙂';
+    $('fq-stars').textContent=stars;
+    $('fq-res').innerHTML=`You got <b>${correct}/${ROUND}</b> right!<br>🏆 Best streak: ${best}`;
+    $('fq-overlay').style.display='flex';partyConfetti();
+  }
 
   function updSound(){$('fq-sound').textContent=muted?'🔇':'🔊';}
   $('fq-sound').addEventListener('click',()=>{muted=!muted;updSound();if(muted&&'speechSynthesis'in window)speechSynthesis.cancel();else{AC();sYay();}});
-  updSound();next();
+  $('fq-again').addEventListener('click',startRound);
+  updSound();startRound();
 })();
 </script>
 </body>

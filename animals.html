@@ -41,6 +41,8 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
 .confetti{position:absolute;top:-40px;animation:fall linear forwards;pointer-events:none;font-size:30px;}
 @keyframes fall{to{transform:translateY(640px) rotate(540deg);opacity:.9;}}
 @keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.floatp{position:absolute;left:50%;top:38%;transform:translateX(-50%);font-size:32px;font-weight:800;pointer-events:none;animation:floatup .9s ease-out forwards;text-shadow:0 2px 6px rgba(0,0,0,.18);z-index:6;}
+@keyframes floatup{0%{opacity:0;transform:translate(-50%,12px) scale(.7)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-50px) scale(1.12)}}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
 @media (max-width:430px){.title{font-size:25px;}.q{font-size:20px;}.ans{font-size:20px;padding:16px;}}
 </style>
@@ -116,11 +118,14 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
     {k:'lion',name:'lion',baby:'Cub'}
   ];
   const PER_GAME=8;
-  let queue=[],score=0,cur=null,answered=false;
+  let queue=[],score=0,cur=null,answered=false,combo=0;
   const $=id=>document.getElementById(id);
+  const PRAISE=['Yes!','Nice!','Great!','Awesome!','Super!','Amazing!','Wow!','Champion!'];
+  function floatPraise(txt,col){const d=document.createElement('div');d.className='floatp';d.textContent=txt;d.style.color=col||'#1f9e72';document.querySelector('.card').appendChild(d);setTimeout(()=>d.remove(),900);}
+  function comboTone(){const f=520+Math.min(combo,9)*55;tone(f,0,0.1,'sine',0.2);tone(f*1.5,0.07,0.12,'sine',0.16);}
   function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
-  function newGame(){score=0;queue=shuffle(ANIMALS.slice());$('ba-overlay').style.display='none';next();}
+  function newGame(){score=0;combo=0;queue=shuffle(ANIMALS.slice());$('ba-overlay').style.display='none';next();}
   function next(){
     answered=false;$('ba-reveal').textContent='';
     if(!queue.length)queue=shuffle(ANIMALS.slice());
@@ -139,8 +144,9 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
     AC();const val=btn.dataset.a;
     if(answered)return;
     if(val===cur.baby){
-      answered=true;btn.classList.add('good');sYay();score++;
+      answered=true;btn.classList.add('good');score++;combo++;comboTone();
       $('ba-prog').textContent=`⭐ ${score} / ${PER_GAME}`;
+      floatPraise((combo>=2?('🔥'+combo+' '):'')+(combo>=3?PRAISE[Math.min(combo-1,PRAISE.length-1)]:PRAISE[Math.floor(Math.random()*3)]));
       const msg=`Yes! A baby ${cur.name} is a ${cur.baby}!`;
       $('ba-reveal').textContent='🎉 '+msg;
       let moved=false;
@@ -148,7 +154,7 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
       if(!muted&&'speechSynthesis'in window){speak(msg,()=>setTimeout(go,500));setTimeout(go,5000);}
       else setTimeout(go,1300);
     }else{
-      btn.classList.add('bad');sNope();
+      btn.classList.add('bad');sNope();combo=0;floatPraise('Try again!','#d23c80');
       setTimeout(()=>btn.classList.remove('bad'),420);
     }
   }

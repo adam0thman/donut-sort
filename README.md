@@ -8,10 +8,12 @@ A tiny arcade of colorful games for little kids. No ads, no tracking, no depende
 - **🍩 Donut Sort** (ages ~5–7) — sort the donut towers so each pole holds one flavor. 8 levels, undo / restart / new deal, every level verified solvable.
 - **🍓 Yummy Match** (ages ~3–5) — a gentle memory game: tap two cards to find the matching treats. 4 levels that grow from 3 to 8 pairs.
 - **🐾 Baby Animals** (ages ~4–7) — see a hand-drawn animal and tap the right baby name (a baby cow is a Calf!). The question is read aloud for pre-readers, with gentle retry-until-right. 11 animals, 8 questions a round.
-- **🌍 Flag Quiz** (ages ~6+) — a flag appears and you tap the country it belongs to. The choices grow from 3 to 5 as your streak climbs. Tracks your current streak and your best-ever streak (saved on the device). 24 countries.
-- **🔢 Math Quest** (ages ~5–8) — a 24-question math trainer with a progress bar and score. Mixes addition, subtraction, counting pictures, "tap the bigger number", missing numbers, number patterns, and simple times tables, getting harder as you go. Questions are read aloud.
+- **🌍 Flag Quiz** (ages ~6+) — a flag appears and you tap the country it belongs to. Played in short **rounds of 10** with a results screen (stars + best streak, saved on the device). Choices grow from 3 to 5 as your streak climbs. 24 countries.
+- **🔢 Math Quest** (ages ~5–8) — a math trainer in **3 levels of 8 questions** with a celebration between each. Mixes addition, subtraction, counting pictures, "tap the bigger number", missing numbers, number patterns, and simple times tables, getting harder each level. Questions are read aloud.
 - **🦈 Typing Shark** (💻 keyboard) — words swim down; type each one before it reaches the bottom. 3 lives, levels and speed that ramp up, word lengths that grow. Keyboard-typing practice. Best on a computer.
 - **🔨 Whack-a-Mole** (🖱️ mouse) — a 30-second reflex round: click the moles, dodge the bombs. Tracks score, accuracy %, and best score (saved on the device). Mouse/trackpad practice. Best on a computer.
+
+Every quiz game has a **dopamine layer**: floating praise ("🔥3 Awesome!"), combo sounds that rise in pitch as you build a streak, and confetti bursts at milestones.
 
 A big friendly **Back** button on every game returns to the game-picker hub. Cheerful sound effects are built in (toggle with the 🔊 button) and work with no audio files — generated with the Web Audio API.
 

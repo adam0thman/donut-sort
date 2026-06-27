@@ -40,6 +40,8 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
 .confetti{position:absolute;top:-40px;animation:fall linear forwards;pointer-events:none;font-size:28px;}
 @keyframes fall{to{transform:translateY(640px) rotate(540deg);opacity:.9;}}
 @keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.floatp{position:absolute;left:50%;top:42%;transform:translateX(-50%);font-size:32px;font-weight:800;pointer-events:none;animation:floatup .9s ease-out forwards;text-shadow:0 2px 6px rgba(0,0,0,.18);z-index:6;}
+@keyframes floatup{0%{opacity:0;transform:translate(-50%,12px) scale(.7)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-50px) scale(1.12)}}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
 @media (max-width:430px){.title{font-size:25px;}.prompt{font-size:32px;}.ans{font-size:26px;}.diagram{font-size:32px;}}
 </style>
@@ -69,7 +71,7 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
   <div id="mq-overlay" style="display:none;position:absolute;inset:0;background:rgba(60,30,10,.5);backdrop-filter:blur(2px);align-items:center;justify-content:center;flex-direction:column;z-index:5;border-radius:var(--br-xl);">
     <div style="background:#fff;border-radius:var(--br-xl);padding:26px 30px;text-align:center;max-width:330px;animation:pop .4s ease;box-shadow:0 10px 0 rgba(0,0,0,.12);">
       <div id="mq-stars" style="font-size:40px;line-height:1;margin-bottom:6px;"></div>
-      <div style="font-size:26px;font-weight:800;color:#e07b1f;">All done! 🎉</div>
+      <div id="mq-title" style="font-size:26px;font-weight:800;color:#e07b1f;">All done! 🎉</div>
       <div id="mq-win-sub" style="font-size:17px;color:#7a6757;margin:6px 0 18px;font-weight:800;"></div>
       <button class="btn" id="mq-again" style="background:#ff9f1c;color:#fff;font-size:19px;font-weight:800;padding:14px 28px;box-shadow:0 5px 0 #d27c00;">Play again 🔢</button>
     </div>
@@ -87,15 +89,14 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
   const sWin=()=>[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,i*0.12,0.3,'triangle',0.24));
   function speak(t){if(muted||!('speechSynthesis'in window))return;try{const u=new SpeechSynthesisUtterance(t);u.rate=0.95;u.pitch=1.1;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
 
-  const TOTAL=24;
+  const LSIZE=8,MAXLVL=3;
   const EMOJI=['🍩','🍎','⭐','🎈','🍌','🐶'];
   const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
   const pickRnd=a=>a[Math.floor(Math.random()*a.length)];
   function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
   function distractors(ans,count){const set=new Set([ans]);const cand=[ans+1,ans-1,ans+2,ans-2,ans+3,ans-3,ans+5,ans+10];for(const c of cand){if(set.size>count)break;if(c>=0)set.add(c);}let g=1;while(set.size<=count){const c=ans+ (g%2? g: -g);if(c>=0)set.add(c);g++;if(g>40)break;}return shuffle([...set]).slice(0,count+1);}
 
-  function makeQ(i){
-    const tier=i<8?0:i<16?1:2;
+  function makeQ(tier){
     const pool=tier===0?['add','count','compare']:tier===1?['add','sub','missing','count']:['add','sub','mult','pattern'];
     const type=pickRnd(pool);
     let prompt,say,ans,opts,diagram=null,optn=tier===2?4:3;
@@ -110,17 +111,21 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
     return {type,prompt,say,ans,opts,diagram};
   }
 
-  let qs=[],idx=0,score=0,answered=false,cur=null;
+  let qs=[],qi=0,level=1,levelCorrect=0,totalCorrect=0,combo=0,answered=false,cur=null,nextAction=null;
   const $=id=>document.getElementById(id);
+  const PRAISE=['Yes!','Nice!','Great!','Awesome!','Super!','Brilliant!','Wow!','Genius!'];
+  function floatPraise(txt,col){const d=document.createElement('div');d.className='floatp';d.textContent=txt;d.style.color=col||'#1f9e72';document.querySelector('.card').appendChild(d);setTimeout(()=>d.remove(),900);}
+  function comboTone(){const f=520+Math.min(combo,9)*55;tone(f,0,0.1,'sine',0.2);tone(f*1.5,0.07,0.12,'sine',0.16);}
 
-  function start(){qs=[];for(let i=0;i<TOTAL;i++)qs.push(makeQ(i));idx=0;score=0;$('mq-overlay').style.display='none';show();}
+  function startGame(){level=1;totalCorrect=0;beginLevel();}
+  function beginLevel(){qs=[];for(let i=0;i<LSIZE;i++)qs.push(makeQ(level-1));qi=0;levelCorrect=0;combo=0;$('mq-overlay').style.display='none';show();}
   function show(){
-    answered=false;cur=qs[idx];
-    if(cur.diagram!==null&&cur.type==='count') $('mq-prompt').innerHTML=`<div class="diagram">${cur.diagram}</div><div class="prompt">How many?</div>`;
+    answered=false;cur=qs[qi];
+    if(cur.type==='count') $('mq-prompt').innerHTML=`<div class="diagram">${cur.diagram}</div><div class="prompt">How many?</div>`;
     else $('mq-prompt').innerHTML=`<div class="prompt">${cur.prompt}</div>`;
-    $('mq-prog').textContent=`Q ${idx+1} / ${TOTAL}`;
-    $('mq-score').textContent='⭐ '+score;
-    $('mq-fill').style.width=Math.round(idx/TOTAL*100)+'%';
+    $('mq-prog').textContent=`Level ${level} • ${qi+1}/${LSIZE}`;
+    $('mq-score').textContent='⭐ '+totalCorrect;
+    $('mq-fill').style.width=Math.round(qi/LSIZE*100)+'%';
     const n=cur.opts.length;
     $('mq-answers').style.gridTemplateColumns=`repeat(${n===4?2:n},1fr)`;
     $('mq-answers').innerHTML=cur.opts.map(o=>`<button class="ans" data-a="${o}">${o}</button>`).join('');
@@ -130,24 +135,44 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
   function pick(btn){
     AC();if(answered)return;answered=true;
     const val=parseInt(btn.dataset.a,10);const box=$('mq-answers');
-    if(val===cur.ans){btn.classList.add('good');sYay();score++;$('mq-score').textContent='⭐ '+score;setTimeout(adv,800);}
-    else{btn.classList.add('bad');sNope();Array.from(box.querySelectorAll('.ans')).forEach(b=>{if(parseInt(b.dataset.a,10)===cur.ans)b.classList.add('good');});setTimeout(adv,1600);}
+    if(val===cur.ans){
+      btn.classList.add('good');levelCorrect++;totalCorrect++;combo++;
+      $('mq-score').textContent='⭐ '+totalCorrect;comboTone();
+      const word=combo>=3?PRAISE[Math.min(combo-1,PRAISE.length-1)]:PRAISE[Math.floor(Math.random()*3)];
+      floatPraise((combo>=2?('🔥'+combo+' '):'')+word);
+      if(combo>0&&combo%3===0)confetti(document.querySelector('.card'),12);
+      setTimeout(adv,combo>=3?650:850);
+    }else{
+      btn.classList.add('bad');sNope();floatPraise('Oops!','#d23c80');combo=0;
+      Array.from(box.querySelectorAll('.ans')).forEach(b=>{if(parseInt(b.dataset.a,10)===cur.ans)b.classList.add('good');});
+      setTimeout(adv,1600);
+    }
   }
-  function adv(){idx++;if(idx>=TOTAL){end();return;}show();}
-  function end(){
+  function adv(){qi++;if(qi>=LSIZE){endLevel();return;}show();}
+  function endLevel(){
     sWin();$('mq-fill').style.width='100%';
-    const stars=score>=22?'⭐⭐⭐':score>=16?'⭐⭐':score>=8?'⭐':'🙂';
+    const stars=levelCorrect>=8?'⭐⭐⭐':levelCorrect>=6?'⭐⭐':levelCorrect>=3?'⭐':'🙂';
     $('mq-stars').textContent=stars;
-    $('mq-win-sub').textContent=`You got ${score} out of ${TOTAL} right!`;
-    const o=$('mq-overlay');o.style.display='flex';confetti(o);
+    if(level<MAXLVL){
+      $('mq-title').textContent=`Level ${level} done! 🎉`;
+      $('mq-win-sub').textContent=`You got ${levelCorrect}/${LSIZE}. On to level ${level+1}!`;
+      $('mq-again').textContent='Next level ▶';
+      nextAction=()=>{level++;beginLevel();};
+    }else{
+      $('mq-title').textContent='All levels done! 🏆';
+      $('mq-win-sub').textContent=`Total: ${totalCorrect}/${LSIZE*MAXLVL} right!`;
+      $('mq-again').textContent='Play again 🔢';
+      nextAction=startGame;
+    }
+    const o=$('mq-overlay');o.style.display='flex';confetti(o,28);
   }
-  function confetti(o){o.querySelectorAll('.confetti').forEach(e=>e.remove());const e2=['⭐','🎉','🔢','✨','🏆'];for(let k=0;k<28;k++){const d=document.createElement('div');d.className='confetti';d.textContent=e2[Math.floor(Math.random()*e2.length)];d.style.left=Math.round(Math.random()*100)+'%';d.style.fontSize=(20+Math.random()*16)+'px';d.style.animationDuration=(1.6+Math.random()*1.4).toFixed(2)+'s';d.style.animationDelay=(Math.random()*0.5).toFixed(2)+'s';o.appendChild(d);setTimeout(()=>d.remove(),3600);}}
+  function confetti(o,count){o.querySelectorAll('.confetti').forEach(e=>e.remove());const e2=['⭐','🎉','🔢','✨','🏆'];const N=count||24;for(let k=0;k<N;k++){const d=document.createElement('div');d.className='confetti';d.textContent=e2[Math.floor(Math.random()*e2.length)];d.style.left=Math.round(Math.random()*100)+'%';d.style.fontSize=(20+Math.random()*16)+'px';d.style.animationDuration=(1.6+Math.random()*1.4).toFixed(2)+'s';d.style.animationDelay=(Math.random()*0.5).toFixed(2)+'s';o.appendChild(d);setTimeout(()=>d.remove(),3600);}}
 
   function updSound(){$('mq-sound').textContent=muted?'🔇':'🔊';}
   $('mq-sound').addEventListener('click',()=>{muted=!muted;updSound();if(muted&&'speechSynthesis'in window)speechSynthesis.cancel();else{AC();sYay();}});
   $('mq-say').addEventListener('click',()=>{if(cur)speak(cur.say);});
-  $('mq-again').addEventListener('click',start);
-  updSound();start();
+  $('mq-again').addEventListener('click',()=>{if(nextAction)nextAction();});
+  updSound();startGame();
 })();
 </script>
 </body>

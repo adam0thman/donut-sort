@@ -38,6 +38,8 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
 .confetti{position:absolute;top:-40px;animation:fall linear forwards;pointer-events:none;}
 @keyframes fall{to{transform:translateY(640px) rotate(540deg);opacity:.9;}}
 @keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.floatp{position:absolute;left:50%;top:40%;transform:translateX(-50%);font-size:30px;font-weight:800;pointer-events:none;animation:floatup .9s ease-out forwards;text-shadow:0 2px 6px rgba(0,0,0,.2);z-index:6;}
+@keyframes floatup{0%{opacity:0;transform:translate(-50%,12px) scale(.7)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-50px) scale(1.12)}}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
 @media (max-width:430px){.title{font-size:25px;}#board{gap:9px;}}
 </style>
@@ -101,13 +103,15 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
   const STAR=`<svg viewBox="0 0 100 100"><path d="M50 22 L59 42 L81 44 L64 59 L70 81 L50 69 L30 81 L36 59 L19 44 L41 42 Z" fill="#fff" opacity="0.92"/><circle cx="26" cy="26" r="4" fill="#fff" opacity="0.6"/><circle cx="76" cy="74" r="4" fill="#fff" opacity="0.6"/></svg>`;
 
   const LEVELS=[{pairs:3,cols:3},{pairs:4,cols:4},{pairs:6,cols:4},{pairs:8,cols:4}];
-  let lvl=0,first=null,lock=false,matched=0,total=0;
+  let lvl=0,first=null,lock=false,matched=0,total=0,combo=0;
   const $=id=>document.getElementById(id);
+  const PRAISE=['Yay!','Nice!','Great!','Awesome!','Super!','Wow!'];
+  function floatPraise(txt){const d=document.createElement('div');d.className='floatp';d.textContent=txt;d.style.color='#16b3a0';$('board').parentElement.appendChild(d);setTimeout(()=>d.remove(),900);}
 
   function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
   function build(){
-    const def=LEVELS[lvl];first=null;lock=false;matched=0;total=def.pairs;
+    const def=LEVELS[lvl];first=null;lock=false;matched=0;total=def.pairs;combo=0;
     const pick=shuffle(KEYS.slice()).slice(0,def.pairs);
     const deck=shuffle(pick.concat(pick));
     const board=$('board');
@@ -126,9 +130,9 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
     lock=true;
     const a=first,b=card;
     if(a.dataset.food===b.dataset.food){
-      setTimeout(()=>{a.classList.add('matched');b.classList.add('matched');sMatch();matched++;first=null;lock=false;$('mm-prog').textContent=`Found ${matched} / ${total}`;if(matched===total)setTimeout(win,520);},260);
+      setTimeout(()=>{a.classList.add('matched');b.classList.add('matched');sMatch();matched++;combo++;floatPraise((combo>=2?('🔥'+combo+' '):'')+(combo>=3?PRAISE[Math.min(combo-1,PRAISE.length-1)]:PRAISE[Math.floor(Math.random()*3)]));first=null;lock=false;$('mm-prog').textContent=`Found ${matched} / ${total}`;if(matched===total)setTimeout(win,520);},260);
     }else{
-      sNope();
+      sNope();combo=0;
       setTimeout(()=>{a.classList.remove('flipped');b.classList.remove('flipped');first=null;lock=false;},850);
     }
   }
