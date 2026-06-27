@@ -90,8 +90,8 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
 
   function level(){return Math.floor(score/8)+1;}
   function pool(){const L=level();let p=EASY.slice();if(L>=3)p=p.concat(MED);if(L>=6)p=p.concat(HARD);return p;}
-  function spawnInterval(){return Math.max(750,2100-level()*120);}
-  function fallSpeed(){return 38+level()*7;}
+  function spawnInterval(){return Math.max(1700,3400-level()*80);}
+  function fallSpeed(){return 16+level()*2.5;}
 
   function spawn(){
     const p=pool();const text=p[Math.floor(Math.random()*p.length)];

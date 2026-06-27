@@ -124,7 +124,7 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
     const o=free[Math.floor(Math.random()*free.length)];
     const bomb=Math.random()<0.18;
     o.state=bomb?'bomb':'mole';o.mole.innerHTML=bomb?BOMB:MOLE;o.el.classList.add('up');
-    const up=Math.max(550,1150-elapsed*18);
+    const up=Math.max(1000,1900-elapsed*14);
     o.timer=setTimeout(()=>{if(o.state!=='empty'){o.el.classList.remove('up');o.state='empty';}},up);
   }
 
@@ -132,8 +132,8 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
     if(!running)return;
     if(!tickT)tickT=ts;
     spawnT+=16;
-    const gap=Math.max(420,950-elapsed*28);
-    if(spawnT>=gap){spawnT=0;const maxUp=elapsed>16?3:2;if(holes.filter(o=>o.state!=='empty').length<maxUp)popOne();}
+    const gap=Math.max(900,1700-elapsed*20);
+    if(spawnT>=gap){spawnT=0;const maxUp=elapsed>20?2:1;if(holes.filter(o=>o.state!=='empty').length<maxUp)popOne();}
     if(ts-tickT>=1000){tickT=ts;timeLeft--;elapsed++;$('wm-time').textContent='⏱️ '+timeLeft;if(timeLeft<=0){end();return;}}
     requestAnimationFrame(loop);
   }
