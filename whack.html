@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#7cb342">
+<title>Whack-a-Mole</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%237cb342'/><ellipse cx='50' cy='58' rx='30' ry='28' fill='%239c6b3f'/><circle cx='40' cy='52' r='5' fill='%23222'/><circle cx='60' cy='52' r='5' fill='%23222'/></svg>">
+<style>
+:root{--tx:#2a3a14;--fs:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--br-xl:22px;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
+html,body{margin:0;padding:0;}
+body{font-family:var(--fs);color:var(--tx);min-height:100vh;
+  background:linear-gradient(160deg,#cfef9c 0%,#8fd06a 48%,#5aa3d6 100%) fixed;
+  display:flex;justify-content:center;cursor:crosshair;
+  padding:max(14px,env(safe-area-inset-top)) 14px max(16px,env(safe-area-inset-bottom));}
+#wrap{width:100%;max-width:680px;}
+.topbar{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.back-btn{display:inline-flex;align-items:center;gap:8px;font-family:inherit;font-size:18px;font-weight:800;color:#fff;background:#5a8a2a;border:none;border-radius:999px;padding:13px 22px;cursor:pointer;box-shadow:0 5px 0 #436a1d;text-decoration:none;transition:transform .08s,box-shadow .08s;}
+.back-btn:active{transform:translateY(4px);box-shadow:0 1px 0 #436a1d;}
+.title{font-size:30px;font-weight:800;color:#fff;text-shadow:0 3px 0 #5a8a2a,0 4px 6px rgba(0,0,0,.18);margin-left:4px;}
+.headrow{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.pill{font-size:15px;font-weight:800;color:#436a1d;background:#fff;padding:6px 14px;border-radius:999px;box-shadow:0 2px 0 rgba(0,0,0,.08);}
+.btn{font-family:inherit;font-size:15px;font-weight:800;color:#2a3a14;background:#fff;border:none;border-radius:999px;padding:10px 14px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.12);transition:transform .08s,box-shadow .08s;}
+.btn:active{transform:translateY(3px);box-shadow:0 0 0 rgba(0,0,0,.12);}
+.ic{width:1.1em;height:1.1em;vertical-align:-.18em;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
+.field{position:relative;background:rgba(255,255,255,.45);border-radius:var(--br-xl);padding:18px;border:4px solid #fff;box-shadow:0 8px 0 rgba(0,0,0,.1);}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.hole{position:relative;aspect-ratio:1.25;overflow:hidden;cursor:pointer;}
+.dirt{position:absolute;left:5%;right:5%;bottom:0;height:42%;background:#7a5230;border-radius:50%;box-shadow:inset 0 6px 0 #5e3f24;}
+.mole{position:absolute;left:50%;bottom:6%;width:64%;transform:translate(-50%,120%);transition:transform .12s ease-out;}
+.hole.up .mole{transform:translate(-50%,8%);}
+.hole.whacked .mole{transform:translate(-50%,8%) scale(.85);}
+.mole svg{display:block;width:100%;height:auto;pointer-events:none;}
+.hit-fx{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%);font-size:30px;pointer-events:none;animation:fx .45s ease forwards;}
+@keyframes fx{0%{transform:translate(-50%,-50%) scale(.6);opacity:1}100%{transform:translate(-50%,-50%) scale(1.5);opacity:0}}
+.overlay{position:absolute;inset:0;background:rgba(30,50,15,.6);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:5;border-radius:var(--br-xl);}
+.panel{background:#fff;border-radius:var(--br-xl);padding:26px 30px;text-align:center;max-width:360px;box-shadow:0 10px 0 rgba(0,0,0,.12);}
+.bigbtn{background:#ff9f1c;color:#fff;font-size:20px;font-weight:800;padding:14px 30px;border:none;border-radius:999px;cursor:pointer;box-shadow:0 5px 0 #d27c00;margin-top:8px;}
+.bigbtn:active{transform:translateY(4px);box-shadow:0 1px 0 #d27c00;}
+.confetti{position:absolute;top:-40px;animation:fall linear forwards;pointer-events:none;font-size:26px;}
+@keyframes fall{to{transform:translateY(560px) rotate(540deg);opacity:.9;}}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+@media (max-width:430px){.title{font-size:25px;}.grid{gap:10px;}}
+</style>
+</head>
+<body>
+<div id="wrap">
+<h1 class="sr-only">Whack-a-Mole reflex game</h1>
+<div class="topbar">
+  <a class="back-btn" href="index.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6l6 6"/></svg> Back</a>
+  <span class="title">🔨 Whack-a-Mole</span>
+</div>
+
+<div class="headrow">
+  <span class="pill" id="wm-score">⭐ 0</span>
+  <span class="pill" id="wm-time">⏱️ 30</span>
+  <span class="pill" id="wm-acc">🎯 100%</span>
+  <button class="btn" id="wm-sound" aria-label="Toggle sound"></button>
+</div>
+
+<div class="field" id="wm-field">
+  <div class="grid" id="wm-grid"></div>
+  <div class="overlay" id="wm-overlay">
+    <div class="panel">
+      <div style="font-size:46px;line-height:1;margin-bottom:4px;">🔨</div>
+      <div id="wm-title" style="font-size:24px;font-weight:800;color:#5a8a2a;">Whack-a-Mole</div>
+      <div id="wm-sub" style="font-size:15px;color:#5a705a;font-weight:700;margin:8px 0 6px;">Click the moles, avoid the bombs 💣<br>🖱️ Best played with a mouse or trackpad.</div>
+      <div id="wm-result" style="font-size:16px;color:#2a3a14;font-weight:800;margin:8px 0;"></div>
+      <button class="bigbtn" id="wm-start">Start ▶</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+(function(){
+  let muted=false,_ac;
+  function AC(){if(!_ac){try{_ac=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(_ac&&_ac.state==='suspended')_ac.resume();return _ac;}
+  function tone(f,t0,dur,type,vol){const ac=AC();if(!ac||muted)return;const o=ac.createOscillator(),g=ac.createGain();o.type=type||'sine';o.frequency.value=f;const t=ac.currentTime+t0;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||0.2,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+dur+0.02);}
+  const sBonk=()=>{tone(520,0,0.08,'square',0.22);tone(780,0.05,0.1,'sine',0.16);};
+  const sBoom=()=>{tone(120,0,0.25,'sawtooth',0.22);tone(70,0.05,0.3,'sawtooth',0.18);};
+  const sMiss=()=>tone(220,0,0.1,'sine',0.1);
+  const sWin=()=>[523,659,784,1047,1319].forEach((f,i)=>tone(f,i*0.12,0.3,'triangle',0.22));
+
+  const MOLE=`<svg viewBox="0 0 100 100"><ellipse cx="22" cy="44" rx="8" ry="11" fill="#8a5e36"/><ellipse cx="78" cy="44" rx="8" ry="11" fill="#8a5e36"/><ellipse cx="50" cy="58" rx="34" ry="33" fill="#9c6b3f"/><ellipse cx="50" cy="74" rx="20" ry="15" fill="#e8cdab"/><circle cx="38" cy="50" r="6" fill="#2a1c10"/><circle cx="62" cy="50" r="6" fill="#2a1c10"/><circle cx="40" cy="48" r="2" fill="#fff"/><circle cx="64" cy="48" r="2" fill="#fff"/><ellipse cx="50" cy="64" rx="6.5" ry="5" fill="#3a2418"/><path d="M30 70 l-14 -3 M30 76 l-14 3 M70 70 l14 -3 M70 76 l14 3" stroke="#cbb38f" stroke-width="1.6"/></svg>`;
+  const BOMB=`<svg viewBox="0 0 100 100"><circle cx="48" cy="60" r="30" fill="#2b2f33"/><circle cx="38" cy="50" r="9" fill="#52585e"/><rect x="58" y="22" width="9" height="14" rx="3" fill="#46484a" transform="rotate(25 62 28)"/><path d="M66 22 q10 -8 14 2" stroke="#ff9f1c" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="82" cy="22" r="5" fill="#ff5722"/><circle cx="82" cy="22" r="2.4" fill="#ffd23f"/></svg>`;
+
+  const $=id=>document.getElementById(id);
+  const grid=$('wm-grid');
+  let holes=[],score=0,hits=0,clicks=0,timeLeft=30,running=false,tickT=0,spawnT=0,best=0,elapsed=0;
+  try{best=parseInt(localStorage.getItem('whackBest')||'0',10)||0;}catch(e){}
+
+  function buildGrid(){
+    grid.innerHTML='';holes=[];
+    for(let i=0;i<9;i++){
+      const h=document.createElement('div');h.className='hole';
+      h.innerHTML=`<div class="dirt"></div><div class="mole"></div>`;
+      const mole=h.querySelector('.mole');
+      const obj={el:h,mole,state:'empty',timer:0};
+      h.addEventListener('mousedown',()=>whack(obj,h));
+      h.addEventListener('touchstart',(e)=>{e.preventDefault();whack(obj,h);},{passive:false});
+      grid.appendChild(h);holes.push(obj);
+    }
+  }
+  function fx(h,txt){const d=document.createElement('div');d.className='hit-fx';d.textContent=txt;h.appendChild(d);setTimeout(()=>d.remove(),450);}
+
+  function whack(obj,h){
+    if(!running)return;clicks++;
+    if(obj.state==='mole'){
+      hits++;score++;$('wm-score').textContent='⭐ '+score;sBonk();fx(h,'💥');
+      h.classList.add('whacked');down(obj);
+    }else if(obj.state==='bomb'){
+      score=Math.max(0,score-2);$('wm-score').textContent='⭐ '+score;sBoom();fx(h,'💣');
+      h.style.animation='shake .3s';setTimeout(()=>h.style.animation='',300);down(obj);
+    }else{sMiss();}
+    updAcc();
+  }
+  function down(obj){obj.state='empty';obj.el.classList.remove('up');setTimeout(()=>obj.el.classList.remove('whacked'),130);}
+  function updAcc(){const a=clicks?Math.round(hits/clicks*100):100;$('wm-acc').textContent='🎯 '+a+'%';}
+
+  function popOne(){
+    const free=holes.filter(o=>o.state==='empty');if(!free.length)return;
+    const o=free[Math.floor(Math.random()*free.length)];
+    const bomb=Math.random()<0.18;
+    o.state=bomb?'bomb':'mole';o.mole.innerHTML=bomb?BOMB:MOLE;o.el.classList.add('up');
+    const up=Math.max(550,1150-elapsed*18);
+    o.timer=setTimeout(()=>{if(o.state!=='empty'){o.el.classList.remove('up');o.state='empty';}},up);
+  }
+
+  function loop(ts){
+    if(!running)return;
+    if(!tickT)tickT=ts;
+    spawnT+=16;
+    const gap=Math.max(420,950-elapsed*28);
+    if(spawnT>=gap){spawnT=0;const maxUp=elapsed>16?3:2;if(holes.filter(o=>o.state!=='empty').length<maxUp)popOne();}
+    if(ts-tickT>=1000){tickT=ts;timeLeft--;elapsed++;$('wm-time').textContent='⏱️ '+timeLeft;if(timeLeft<=0){end();return;}}
+    requestAnimationFrame(loop);
+  }
+
+  function start(){
+    holes.forEach(o=>{clearTimeout(o.timer);o.state='empty';o.el.classList.remove('up','whacked');});
+    score=0;hits=0;clicks=0;timeLeft=30;elapsed=0;spawnT=0;tickT=0;
+    $('wm-score').textContent='⭐ 0';$('wm-time').textContent='⏱️ 30';$('wm-acc').textContent='🎯 100%';
+    $('wm-overlay').style.display='none';running=true;AC();requestAnimationFrame(loop);
+  }
+  function end(){
+    running=false;holes.forEach(o=>{clearTimeout(o.timer);o.state='empty';o.el.classList.remove('up');});
+    const acc=clicks?Math.round(hits/clicks*100):100;
+    if(score>best){best=score;try{localStorage.setItem('whackBest',String(best));}catch(e){}}
+    sWin();
+    $('wm-title').textContent='Time up!';
+    $('wm-sub').innerHTML='Great whacking! 🔨';
+    $('wm-result').innerHTML=`⭐ Score: ${score} &nbsp; 🎯 ${acc}%<br>🏆 Best: ${best}`;
+    $('wm-start').textContent='Play again ▶';
+    const o=$('wm-overlay');o.style.display='flex';confetti(o);
+  }
+  function confetti(o){const e=['⭐','🎉','🔨','✨'];for(let k=0;k<24;k++){const d=document.createElement('div');d.className='confetti';d.textContent=e[Math.floor(Math.random()*e.length)];d.style.left=Math.round(Math.random()*100)+'%';d.style.fontSize=(20+Math.random()*16)+'px';d.style.animationDuration=(1.6+Math.random()*1.3).toFixed(2)+'s';d.style.animationDelay=(Math.random()*0.4).toFixed(2)+'s';o.appendChild(d);setTimeout(()=>d.remove(),3400);}}
+
+  function updSound(){$('wm-sound').textContent=muted?'🔇':'🔊';}
+  $('wm-sound').addEventListener('click',()=>{muted=!muted;updSound();if(!muted){AC();sBonk();}});
+  $('wm-start').addEventListener('click',start);
+  buildGrid();updSound();
+})();
+</script>
+</body>
+</html>

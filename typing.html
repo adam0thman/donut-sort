@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f7a8c">
+<title>Typing Shark</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231f7a8c'/><text x='50' y='72' font-size='62' text-anchor='middle'>🦈</text></svg>">
+<style>
+:root{--tx:#0e2a33;--fs:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--br-xl:22px;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{font-family:var(--fs);color:var(--tx);min-height:100vh;
+  background:linear-gradient(160deg,#a7e8f0 0%,#5cc4d6 45%,#2f7fb0 100%) fixed;
+  display:flex;justify-content:center;
+  padding:max(14px,env(safe-area-inset-top)) 14px max(16px,env(safe-area-inset-bottom));}
+#wrap{width:100%;max-width:900px;}
+.topbar{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.back-btn{display:inline-flex;align-items:center;gap:8px;font-family:inherit;font-size:18px;font-weight:800;color:#fff;background:#1f7a8c;border:none;border-radius:999px;padding:13px 22px;cursor:pointer;box-shadow:0 5px 0 #155a68;text-decoration:none;transition:transform .08s,box-shadow .08s;}
+.back-btn:active{transform:translateY(4px);box-shadow:0 1px 0 #155a68;}
+.title{font-size:30px;font-weight:800;color:#fff;text-shadow:0 3px 0 #1f7a8c,0 4px 6px rgba(0,0,0,.18);margin-left:4px;}
+.headrow{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.pill{font-size:15px;font-weight:800;color:#155a68;background:#fff;padding:6px 14px;border-radius:999px;box-shadow:0 2px 0 rgba(0,0,0,.08);}
+.btn{font-family:inherit;font-size:15px;font-weight:800;color:#0e2a33;background:#fff;border:none;border-radius:999px;padding:10px 14px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.12);transition:transform .08s,box-shadow .08s;}
+.btn:active{transform:translateY(3px);box-shadow:0 0 0 rgba(0,0,0,.12);}
+.ic{width:1.1em;height:1.1em;vertical-align:-.18em;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
+.sea{position:relative;height:62vh;min-height:400px;border-radius:var(--br-xl);overflow:hidden;border:4px solid #fff;box-shadow:0 8px 0 rgba(0,0,0,.1);
+  background:linear-gradient(180deg,#cdeff5 0%,#7fd0e0 40%,#2f7fb0 100%);}
+.word{position:absolute;transform:translateX(-50%);font-size:22px;font-weight:800;color:#0e2a33;background:#fff;padding:8px 14px;border-radius:999px;box-shadow:0 3px 0 rgba(0,0,0,.16);white-space:nowrap;}
+.word.target{box-shadow:0 0 0 3px #ffd23f,0 3px 0 rgba(0,0,0,.16);}
+.word .hit{color:#1f9e72;}
+.buffer{position:absolute;left:0;right:0;bottom:10px;text-align:center;font-size:24px;font-weight:800;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.3);letter-spacing:2px;pointer-events:none;}
+.pop{position:absolute;transform:translate(-50%,-50%);font-size:30px;animation:pop .5s ease forwards;pointer-events:none;}
+@keyframes pop{0%{transform:translate(-50%,-50%) scale(.6);opacity:1}100%{transform:translate(-50%,-50%) scale(1.6);opacity:0}}
+.overlay{position:absolute;inset:0;background:rgba(10,40,50,.6);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:5;}
+.panel{background:#fff;border-radius:var(--br-xl);padding:26px 30px;text-align:center;max-width:360px;box-shadow:0 10px 0 rgba(0,0,0,.12);}
+.bigbtn{background:#ff5fa2;color:#fff;font-size:20px;font-weight:800;padding:14px 30px;border:none;border-radius:999px;cursor:pointer;box-shadow:0 5px 0 #d23c80;margin-top:8px;}
+.bigbtn:active{transform:translateY(4px);box-shadow:0 1px 0 #d23c80;}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+@media (max-width:430px){.title{font-size:25px;}.word{font-size:18px;}}
+</style>
+</head>
+<body>
+<div id="wrap">
+<h1 class="sr-only">Typing Shark keyboard game</h1>
+<div class="topbar">
+  <a class="back-btn" href="index.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6l6 6"/></svg> Back</a>
+  <span class="title">🦈 Typing Shark</span>
+</div>
+
+<div class="headrow">
+  <span class="pill" id="ts-score">⭐ 0</span>
+  <span class="pill" id="ts-lives" style="color:#d23c80;">❤️❤️❤️</span>
+  <span class="pill" id="ts-level">🌊 Level 1</span>
+  <button class="btn" id="ts-sound" aria-label="Toggle sound"></button>
+</div>
+
+<div class="sea" id="ts-sea">
+  <div class="buffer" id="ts-buffer"></div>
+  <div class="overlay" id="ts-overlay">
+    <div class="panel">
+      <div style="font-size:46px;line-height:1;margin-bottom:6px;">🦈</div>
+      <div id="ts-title" style="font-size:24px;font-weight:800;color:#1f7a8c;">Typing Shark</div>
+      <div id="ts-sub" style="font-size:15px;color:#5a7078;font-weight:700;margin:8px 0 6px;">Type each word before it reaches the bottom!<br>⌨️ Best played on a computer keyboard.</div>
+      <div id="ts-result" style="font-size:16px;color:#0e2a33;font-weight:800;margin:8px 0;"></div>
+      <button class="bigbtn" id="ts-start">Start ▶</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+(function(){
+  let muted=false,_ac;
+  function AC(){if(!_ac){try{_ac=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(_ac&&_ac.state==='suspended')_ac.resume();return _ac;}
+  function tone(f,t0,dur,type,vol){const ac=AC();if(!ac||muted)return;const o=ac.createOscillator(),g=ac.createGain();o.type=type||'sine';o.frequency.value=f;const t=ac.currentTime+t0;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||0.18,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+dur+0.02);}
+  const sKey=()=>tone(880,0,0.05,'square',0.08);
+  const sPop=()=>{tone(660,0,0.1,'sine',0.2);tone(990,0.07,0.12,'sine',0.16);};
+  const sBad=()=>tone(180,0,0.16,'sawtooth',0.14);
+  const sOver=()=>[400,330,260,200].forEach((f,i)=>tone(f,i*0.14,0.3,'sine',0.2));
+
+  const EASY='cat dog sun hat run fish ball jump star moon cake blue red fun toy box bee cow pig hop top bug map sky'.split(' ');
+  const MED='apple happy tiger water green table mouse smile cloud train candy lemon zebra panda robot music plant chair'.split(' ');
+  const HARD='rainbow dolphin picture morning kangaroo elephant butterfly mountain dinosaur birthday treasure sandwich'.split(' ');
+
+  const sea=document.getElementById('ts-sea');
+  const bufEl=document.getElementById('ts-buffer');
+  const $=id=>document.getElementById(id);
+  let active=[],target=null,score=0,lives=3,running=false,lastT=0,spawnAcc=0,raf=0;
+
+  function level(){return Math.floor(score/8)+1;}
+  function pool(){const L=level();let p=EASY.slice();if(L>=3)p=p.concat(MED);if(L>=6)p=p.concat(HARD);return p;}
+  function spawnInterval(){return Math.max(750,2100-level()*120);}
+  function fallSpeed(){return 38+level()*7;}
+
+  function spawn(){
+    const p=pool();const text=p[Math.floor(Math.random()*p.length)];
+    const el=document.createElement('div');el.className='word';el.textContent=text;
+    const x=8+Math.random()*84;el.style.left=x+'%';el.style.top='-30px';
+    sea.appendChild(el);
+    active.push({el,text,x,y:-30,typed:0,speed:fallSpeed()*(0.85+Math.random()*0.3)});
+  }
+  function renderWord(w){const t=w.typed;w.el.innerHTML=`<span class="hit">${w.text.slice(0,t)}</span>${w.text.slice(t)}`;}
+  function popAt(x,y){const d=document.createElement('div');d.className='pop';d.textContent='💥';d.style.left=x+'%';d.style.top=y+'px';sea.appendChild(d);setTimeout(()=>d.remove(),500);}
+  function remove(w){w.el.remove();const i=active.indexOf(w);if(i>=0)active.splice(i,1);if(target===w)target=null;}
+
+  function loseLife(){lives--;$('ts-lives').textContent='❤️'.repeat(lives)||'💀';sBad();if(lives<=0)gameOver();}
+
+  function frame(t){
+    if(!running)return;
+    if(!lastT)lastT=t;const dt=Math.min(0.05,(t-lastT)/1000);lastT=t;
+    spawnAcc+=dt*1000;
+    if(spawnAcc>=spawnInterval()){spawnAcc=0;if(active.length<6)spawn();}
+    const h=sea.clientHeight;
+    for(const w of active.slice()){
+      w.y+=w.speed*dt;w.el.style.top=w.y+'px';
+      if(w.y>h-26){remove(w);loseLife();}
+    }
+    raf=requestAnimationFrame(frame);
+  }
+
+  function onKey(e){
+    if(!running)return;
+    const k=e.key;
+    if(k==='Backspace'){e.preventDefault();if(target){target.typed=Math.max(0,target.typed-1);renderWord(target);if(target.typed===0){target.el.classList.remove('target');target=null;}}updBuf();return;}
+    if(k===' ')e.preventDefault();
+    if(k.length!==1||!/[a-zA-Z]/.test(k))return;
+    const c=k.toLowerCase();
+    if(!target){
+      const cands=active.filter(w=>w.text[0]===c);
+      if(cands.length){cands.sort((a,b)=>b.y-a.y);target=cands[0];target.typed=1;target.el.classList.add('target');renderWord(target);sKey();
+        if(target.typed===target.text.length)finishWord();
+      }else{sBad();}
+    }else{
+      if(target.text[target.typed]===c){target.typed++;renderWord(target);sKey();if(target.typed===target.text.length)finishWord();}
+      else{sBad();}
+    }
+    updBuf();
+  }
+  function finishWord(){const w=target;popAt(w.x,w.y);score++;$('ts-score').textContent='⭐ '+score;$('ts-level').textContent='🌊 Level '+level();sPop();remove(w);target=null;updBuf();}
+  function updBuf(){bufEl.textContent=target?target.text.slice(0,target.typed):'';}
+
+  function start(){
+    active.slice().forEach(remove);active=[];target=null;score=0;lives=3;spawnAcc=0;lastT=0;
+    $('ts-score').textContent='⭐ 0';$('ts-lives').textContent='❤️❤️❤️';$('ts-level').textContent='🌊 Level 1';updBuf();
+    $('ts-overlay').style.display='none';running=true;AC();raf=requestAnimationFrame(frame);
+  }
+  function gameOver(){
+    running=false;cancelAnimationFrame(raf);sOver();
+    active.slice().forEach(remove);
+    $('ts-title').textContent='Game over!';
+    $('ts-sub').innerHTML='Nice typing! 🦈';
+    $('ts-result').textContent=`You typed ${score} word${score===1?'':'s'}!`;
+    $('ts-start').textContent='Play again ▶';
+    $('ts-overlay').style.display='flex';
+  }
+
+  function updSound(){$('ts-sound').textContent=muted?'🔇':'🔊';}
+  $('ts-sound').addEventListener('click',()=>{muted=!muted;updSound();if(!muted){AC();sKey();}});
+  $('ts-start').addEventListener('click',start);
+  window.addEventListener('keydown',onKey);
+  updSound();
+})();
+</script>
+</body>
+</html>
