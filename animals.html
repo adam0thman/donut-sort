@@ -87,7 +87,7 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
   const sYay=()=>{tone(660,0,0.13,'sine',0.25);tone(880,0.1,0.18,'sine',0.22);tone(1320,0.2,0.18,'sine',0.16);};
   const sNope=()=>{tone(300,0,0.12,'sine',0.14);tone(230,0.1,0.14,'sine',0.14);};
   const sWin=()=>[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,i*0.13,0.32,'triangle',0.25));
-  function speak(text){if(muted||!('speechSynthesis'in window))return;try{const u=new SpeechSynthesisUtterance(text);u.rate=0.95;u.pitch=1.2;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
+  function speak(text,cb){if(muted||!('speechSynthesis'in window)){if(cb)cb();return;}try{const u=new SpeechSynthesisUtterance(text);u.rate=0.95;u.pitch=1.2;if(cb)u.onend=cb;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){if(cb)cb();}}
 
   const ASVG={
     cow:`<svg viewBox="0 0 100 100"><ellipse cx="22" cy="44" rx="9" ry="13" fill="#f2efe9"/><ellipse cx="78" cy="44" rx="9" ry="13" fill="#f2efe9"/><path d="M34 24 q-6 -10 -2 -14 q6 4 8 12 z" fill="#cfc7b6"/><path d="M66 24 q6 -10 2 -14 q-6 4 -8 12 z" fill="#cfc7b6"/><circle cx="50" cy="50" r="30" fill="#f2efe9"/><path d="M30 38 a8 8 0 0 1 15 5 a8 8 0 0 1 -15 -5z" fill="#2a2118"/><circle cx="66" cy="37" r="7" fill="#2a2118"/><circle cx="42" cy="48" r="4" fill="#2a2118"/><circle cx="60" cy="48" r="4" fill="#2a2118"/><ellipse cx="51" cy="64" rx="16" ry="11" fill="#ffb3c8"/><circle cx="45" cy="64" r="2.4" fill="#9c5b73"/><circle cx="57" cy="64" r="2.4" fill="#9c5b73"/></svg>`,
@@ -142,8 +142,11 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
       answered=true;btn.classList.add('good');sYay();score++;
       $('ba-prog').textContent=`⭐ ${score} / ${PER_GAME}`;
       const msg=`Yes! A baby ${cur.name} is a ${cur.baby}!`;
-      $('ba-reveal').textContent='🎉 '+msg;speak(msg);
-      if(score>=PER_GAME)setTimeout(win,1100);else setTimeout(next,1300);
+      $('ba-reveal').textContent='🎉 '+msg;
+      let moved=false;
+      const go=()=>{if(moved)return;moved=true;if(score>=PER_GAME)win();else next();};
+      if(!muted&&'speechSynthesis'in window){speak(msg,()=>setTimeout(go,500));setTimeout(go,5000);}
+      else setTimeout(go,1300);
     }else{
       btn.classList.add('bad');sNope();
       setTimeout(()=>btn.classList.remove('bad'),420);
