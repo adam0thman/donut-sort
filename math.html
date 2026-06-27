@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#ff9d4d">
+<title>Math Quest</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23ff9d4d'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='%23fff' font-family='Arial' font-weight='bold'>＋</text></svg>">
+<style>
+:root{--tx:#3a2a14;--fs:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--br-xl:22px;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{font-family:var(--fs);color:var(--tx);min-height:100vh;
+  background:linear-gradient(160deg,#ffe39e 0%,#ffb15c 50%,#ff8fb0 100%) fixed;
+  display:flex;justify-content:center;
+  padding:max(14px,env(safe-area-inset-top)) 14px max(16px,env(safe-area-inset-bottom));}
+#wrap{width:100%;max-width:560px;}
+.topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.back-btn{display:inline-flex;align-items:center;gap:8px;font-family:inherit;font-size:18px;font-weight:800;color:#fff;background:#e07b1f;border:none;border-radius:999px;padding:13px 22px;cursor:pointer;box-shadow:0 5px 0 #b35e10;text-decoration:none;transition:transform .08s,box-shadow .08s;touch-action:manipulation;}
+.back-btn:active{transform:translateY(4px);box-shadow:0 1px 0 #b35e10;}
+.title{font-size:30px;font-weight:800;color:#fff;text-shadow:0 3px 0 #e07b1f,0 4px 6px rgba(0,0,0,.18);margin-left:4px;}
+.headrow{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.pill{font-size:15px;font-weight:800;color:#b35e10;background:#fff;padding:6px 14px;border-radius:999px;box-shadow:0 2px 0 rgba(0,0,0,.08);}
+.btn{font-family:inherit;font-size:15px;font-weight:800;color:#3a2a14;background:#fff;border:none;border-radius:999px;padding:10px 14px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.12);transition:transform .08s,box-shadow .08s;touch-action:manipulation;}
+.btn:active{transform:translateY(3px);box-shadow:0 0 0 rgba(0,0,0,.12);}
+.ic{width:1.1em;height:1.1em;vertical-align:-.18em;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
+.bar{height:12px;background:rgba(255,255,255,.55);border-radius:999px;overflow:hidden;margin-bottom:14px;box-shadow:inset 0 1px 2px rgba(0,0,0,.1);}
+.bar > i{display:block;height:100%;width:0;background:#34d399;border-radius:999px;transition:width .3s ease;}
+.card{background:rgba(255,255,255,.85);border-radius:var(--br-xl);padding:22px 16px 22px;text-align:center;box-shadow:0 8px 0 rgba(0,0,0,.07);position:relative;overflow:hidden;}
+.prompt{font-size:38px;font-weight:800;color:#3a2a14;margin:6px 4px 4px;line-height:1.2;letter-spacing:1px;}
+.diagram{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;font-size:38px;line-height:1;margin:6px auto 2px;max-width:320px;}
+.qbtn{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:800;color:#b35e10;background:#fff4e6;border:none;border-radius:999px;padding:7px 14px;cursor:pointer;margin-top:10px;}
+.answers{display:grid;gap:12px;margin-top:16px;}
+.ans{font-family:inherit;font-size:30px;font-weight:800;color:#3a2a14;background:#fff;border:none;border-radius:18px;padding:18px 10px;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.14);transition:transform .08s,box-shadow .08s,background .15s;touch-action:manipulation;}
+.ans:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(0,0,0,.14);}
+.ans.good{background:#34d399;color:#fff;box-shadow:0 5px 0 #1f9e72;animation:cheer .5s ease;}
+.ans.bad{background:#ff8a8a;color:#fff;box-shadow:0 5px 0 #d65a5a;animation:shake .4s ease;}
+@keyframes cheer{0%,100%{transform:scale(1)}40%{transform:scale(1.06)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.confetti{position:absolute;top:-40px;animation:fall linear forwards;pointer-events:none;font-size:28px;}
+@keyframes fall{to{transform:translateY(640px) rotate(540deg);opacity:.9;}}
+@keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+@media (max-width:430px){.title{font-size:25px;}.prompt{font-size:32px;}.ans{font-size:26px;}.diagram{font-size:32px;}}
+</style>
+</head>
+<body>
+<div id="wrap">
+<h1 class="sr-only">Math Quest game</h1>
+<div class="topbar">
+  <a class="back-btn" href="index.html"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6l6 6"/></svg> Back</a>
+  <span class="title">🔢 Math Quest</span>
+</div>
+
+<div class="headrow">
+  <span class="pill" id="mq-prog"></span>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span class="pill" id="mq-score" style="color:#1f9e72;">⭐ 0</span>
+    <button class="btn" id="mq-sound" aria-label="Toggle sound"></button>
+  </div>
+</div>
+<div class="bar"><i id="mq-fill"></i></div>
+
+<div class="card">
+  <div id="mq-prompt"></div>
+  <button class="qbtn" id="mq-say"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 8a3 3 0 0 1 0 8"/><path d="M6 15h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l3.5 -4.5a.8 .8 0 0 1 1.5 .5v14a.8 .8 0 0 1 -1.5 .5z"/></svg> Hear it</button>
+  <div class="answers" id="mq-answers"></div>
+
+  <div id="mq-overlay" style="display:none;position:absolute;inset:0;background:rgba(60,30,10,.5);backdrop-filter:blur(2px);align-items:center;justify-content:center;flex-direction:column;z-index:5;border-radius:var(--br-xl);">
+    <div style="background:#fff;border-radius:var(--br-xl);padding:26px 30px;text-align:center;max-width:330px;animation:pop .4s ease;box-shadow:0 10px 0 rgba(0,0,0,.12);">
+      <div id="mq-stars" style="font-size:40px;line-height:1;margin-bottom:6px;"></div>
+      <div style="font-size:26px;font-weight:800;color:#e07b1f;">All done! 🎉</div>
+      <div id="mq-win-sub" style="font-size:17px;color:#7a6757;margin:6px 0 18px;font-weight:800;"></div>
+      <button class="btn" id="mq-again" style="background:#ff9f1c;color:#fff;font-size:19px;font-weight:800;padding:14px 28px;box-shadow:0 5px 0 #d27c00;">Play again 🔢</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+(function(){
+  let muted=false,_ac;
+  function AC(){if(!_ac){try{_ac=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(_ac&&_ac.state==='suspended')_ac.resume();return _ac;}
+  function tone(f,t0,dur,type,vol){const ac=AC();if(!ac||muted)return;const o=ac.createOscillator(),g=ac.createGain();o.type=type||'sine';o.frequency.value=f;const t=ac.currentTime+t0;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||0.22,t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+dur+0.03);}
+  const sYay=()=>{tone(660,0,0.12,'sine',0.24);tone(990,0.09,0.16,'sine',0.2);};
+  const sNope=()=>{tone(300,0,0.13,'sine',0.15);tone(220,0.11,0.16,'sine',0.15);};
+  const sWin=()=>[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,i*0.12,0.3,'triangle',0.24));
+  function speak(t){if(muted||!('speechSynthesis'in window))return;try{const u=new SpeechSynthesisUtterance(t);u.rate=0.95;u.pitch=1.1;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
+
+  const TOTAL=24;
+  const EMOJI=['🍩','🍎','⭐','🎈','🍌','🐶'];
+  const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+  const pickRnd=a=>a[Math.floor(Math.random()*a.length)];
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  function distractors(ans,count){const set=new Set([ans]);const cand=[ans+1,ans-1,ans+2,ans-2,ans+3,ans-3,ans+5,ans+10];for(const c of cand){if(set.size>count)break;if(c>=0)set.add(c);}let g=1;while(set.size<=count){const c=ans+ (g%2? g: -g);if(c>=0)set.add(c);g++;if(g>40)break;}return shuffle([...set]).slice(0,count+1);}
+
+  function makeQ(i){
+    const tier=i<8?0:i<16?1:2;
+    const pool=tier===0?['add','count','compare']:tier===1?['add','sub','missing','count']:['add','sub','mult','pattern'];
+    const type=pickRnd(pool);
+    let prompt,say,ans,opts,diagram=null,optn=tier===2?4:3;
+    if(type==='add'){const r=tier===0?5:tier===1?10:15;const a=rnd(1,r),b=rnd(1,r);ans=a+b;prompt=`${a} + ${b} = ?`;say=`What is ${a} plus ${b}?`;}
+    else if(type==='sub'){const hi=tier===1?15:20;const a=rnd(4,hi),b=rnd(1,a);ans=a-b;prompt=`${a} − ${b} = ?`;say=`What is ${a} minus ${b}?`;}
+    else if(type==='mult'){const a=rnd(2,5),b=rnd(2,5);ans=a*b;prompt=`${a} × ${b} = ?`;say=`What is ${a} times ${b}?`;}
+    else if(type==='missing'){const a=rnd(1,8),b=rnd(1,8);const c=a+b;ans=b;prompt=`${a} + ? = ${c}`;say=`${a} plus what equals ${c}?`;}
+    else if(type==='pattern'){const step=pickRnd([1,2,2,5,10]);const s=rnd(1,6);const seq=[s,s+step,s+2*step];ans=s+3*step;prompt=`${seq[0]}, ${seq[1]}, ${seq[2]}, ?`;say=`What comes next? ${seq[0]}, ${seq[1]}, ${seq[2]}`;}
+    else if(type==='count'){const n=rnd(2,tier===0?6:9);const em=pickRnd(EMOJI);ans=n;diagram=Array(n).fill(em).join('');prompt='How many?';say='How many?';optn=3;}
+    else{ /* compare */ let a=rnd(1,tier===0?10:20),b=rnd(1,tier===0?10:20);while(b===a)b=rnd(1,20);ans=Math.max(a,b);prompt='Tap the bigger number';say='Tap the bigger number';opts=shuffle([a,b]);return {type,prompt,say,ans,opts,diagram};}
+    opts=distractors(ans,optn-1);
+    return {type,prompt,say,ans,opts,diagram};
+  }
+
+  let qs=[],idx=0,score=0,answered=false,cur=null;
+  const $=id=>document.getElementById(id);
+
+  function start(){qs=[];for(let i=0;i<TOTAL;i++)qs.push(makeQ(i));idx=0;score=0;$('mq-overlay').style.display='none';show();}
+  function show(){
+    answered=false;cur=qs[idx];
+    if(cur.diagram!==null&&cur.type==='count') $('mq-prompt').innerHTML=`<div class="diagram">${cur.diagram}</div><div class="prompt">How many?</div>`;
+    else $('mq-prompt').innerHTML=`<div class="prompt">${cur.prompt}</div>`;
+    $('mq-prog').textContent=`Q ${idx+1} / ${TOTAL}`;
+    $('mq-score').textContent='⭐ '+score;
+    $('mq-fill').style.width=Math.round(idx/TOTAL*100)+'%';
+    const n=cur.opts.length;
+    $('mq-answers').style.gridTemplateColumns=`repeat(${n===4?2:n},1fr)`;
+    $('mq-answers').innerHTML=cur.opts.map(o=>`<button class="ans" data-a="${o}">${o}</button>`).join('');
+    Array.from($('mq-answers').querySelectorAll('.ans')).forEach(b=>b.addEventListener('click',()=>pick(b)));
+    speak(cur.say);
+  }
+  function pick(btn){
+    AC();if(answered)return;answered=true;
+    const val=parseInt(btn.dataset.a,10);const box=$('mq-answers');
+    if(val===cur.ans){btn.classList.add('good');sYay();score++;$('mq-score').textContent='⭐ '+score;setTimeout(adv,800);}
+    else{btn.classList.add('bad');sNope();Array.from(box.querySelectorAll('.ans')).forEach(b=>{if(parseInt(b.dataset.a,10)===cur.ans)b.classList.add('good');});setTimeout(adv,1600);}
+  }
+  function adv(){idx++;if(idx>=TOTAL){end();return;}show();}
+  function end(){
+    sWin();$('mq-fill').style.width='100%';
+    const stars=score>=22?'⭐⭐⭐':score>=16?'⭐⭐':score>=8?'⭐':'🙂';
+    $('mq-stars').textContent=stars;
+    $('mq-win-sub').textContent=`You got ${score} out of ${TOTAL} right!`;
+    const o=$('mq-overlay');o.style.display='flex';confetti(o);
+  }
+  function confetti(o){o.querySelectorAll('.confetti').forEach(e=>e.remove());const e2=['⭐','🎉','🔢','✨','🏆'];for(let k=0;k<28;k++){const d=document.createElement('div');d.className='confetti';d.textContent=e2[Math.floor(Math.random()*e2.length)];d.style.left=Math.round(Math.random()*100)+'%';d.style.fontSize=(20+Math.random()*16)+'px';d.style.animationDuration=(1.6+Math.random()*1.4).toFixed(2)+'s';d.style.animationDelay=(Math.random()*0.5).toFixed(2)+'s';o.appendChild(d);setTimeout(()=>d.remove(),3600);}}
+
+  function updSound(){$('mq-sound').textContent=muted?'🔇':'🔊';}
+  $('mq-sound').addEventListener('click',()=>{muted=!muted;updSound();if(muted&&'speechSynthesis'in window)speechSynthesis.cancel();else{AC();sYay();}});
+  $('mq-say').addEventListener('click',()=>{if(cur)speak(cur.say);});
+  $('mq-again').addEventListener('click',start);
+  updSound();start();
+})();
+</script>
+</body>
+</html>
