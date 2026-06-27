@@ -57,6 +57,7 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
 
 <div class="sea" id="ts-sea">
   <div class="buffer" id="ts-buffer"></div>
+  <input id="ts-input" type="text" inputmode="text" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" aria-label="Type here" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:70%;height:40px;opacity:0;border:0;background:transparent;color:transparent;caret-color:transparent;font-size:16px;outline:none;text-align:center;">
   <div class="overlay" id="ts-overlay">
     <div class="panel">
       <div style="font-size:46px;line-height:1;margin-bottom:6px;">🦈</div>
@@ -119,13 +120,10 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
     raf=requestAnimationFrame(frame);
   }
 
-  function onKey(e){
+  const input=$('ts-input');const SENT=' ';
+  function handleBackspace(){if(!running)return;if(target){target.typed=Math.max(0,target.typed-1);renderWord(target);if(target.typed===0){target.el.classList.remove('target');target=null;}}updBuf();}
+  function handleChar(c){
     if(!running)return;
-    const k=e.key;
-    if(k==='Backspace'){e.preventDefault();if(target){target.typed=Math.max(0,target.typed-1);renderWord(target);if(target.typed===0){target.el.classList.remove('target');target=null;}}updBuf();return;}
-    if(k===' ')e.preventDefault();
-    if(k.length!==1||!/[a-zA-Z]/.test(k))return;
-    const c=k.toLowerCase();
     if(!target){
       const cands=active.filter(w=>w.text[0]===c);
       if(cands.length){cands.sort((a,b)=>b.y-a.y);target=cands[0];target.typed=1;target.el.classList.add('target');renderWord(target);sKey();
@@ -137,13 +135,25 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
     }
     updBuf();
   }
+  function focusInput(){if(running){try{input.focus({preventScroll:true});}catch(e){try{input.focus();}catch(_){}}}}
+  input.addEventListener('input',(e)=>{
+    if(!running){input.value=SENT;return;}
+    const it=e.inputType||'';const v=input.value;
+    if(it.indexOf('delete')!==-1||v.length<SENT.length){handleBackspace();}
+    else{const added=v.slice(SENT.length);for(const ch of added){if(/[a-zA-Z]/.test(ch))handleChar(ch.toLowerCase());}}
+    input.value=SENT;
+  });
+  input.addEventListener('blur',()=>{if(running)setTimeout(focusInput,0);});
+  sea.addEventListener('pointerdown',()=>{if(running)focusInput();});
   function finishWord(){const w=target;popAt(w.x,w.y);score++;$('ts-score').textContent='⭐ '+score;$('ts-level').textContent='🌊 Level '+level();sPop();remove(w);target=null;updBuf();}
   function updBuf(){bufEl.textContent=target?target.text.slice(0,target.typed):'';}
 
   function start(){
     active.slice().forEach(remove);active=[];target=null;score=0;lives=3;spawnAcc=0;lastT=0;
     $('ts-score').textContent='⭐ 0';$('ts-lives').textContent='❤️❤️❤️';$('ts-level').textContent='🌊 Level 1';updBuf();
-    $('ts-overlay').style.display='none';running=true;AC();raf=requestAnimationFrame(frame);
+    $('ts-overlay').style.display='none';running=true;AC();
+    input.value=SENT;focusInput();
+    raf=requestAnimationFrame(frame);
   }
   function gameOver(){
     running=false;cancelAnimationFrame(raf);sOver();
@@ -158,7 +168,6 @@ body{font-family:var(--fs);color:var(--tx);min-height:100vh;
   function updSound(){$('ts-sound').textContent=muted?'🔇':'🔊';}
   $('ts-sound').addEventListener('click',()=>{muted=!muted;updSound();if(!muted){AC();sKey();}});
   $('ts-start').addEventListener('click',start);
-  window.addEventListener('keydown',onKey);
   updSound();
 })();
 </script>
